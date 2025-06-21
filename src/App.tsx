@@ -23,7 +23,14 @@ function App() {
             </UserLayout>
           }
         />
-        <Route path={AUTH_ROUTES.LOGIN} element={<LoginPage />} />
+        <Route
+          path={AUTH_ROUTES.LOGIN}
+          element={
+            <UserLayout>
+              <LoginPage />
+            </UserLayout>
+          }
+        />
 
         <Route
           path={USER_ROUTES.PROFILE}
