@@ -14,6 +14,7 @@ import CoachProfilePage from "./pages/user/coach-profile/CoachProfilePage";
 import UserSessionsPage from "./pages/user/session/UserSessionsPage";
 import CoachSessionsPage from "./pages/user/session/CoachSessionsPage";
 import SessionDetailPage from "./pages/user/session/SessionDetailPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 function App() {
   return (
     <Router>
@@ -32,6 +33,14 @@ function App() {
           element={
             <UserLayout>
               <LoginPage />
+            </UserLayout>
+          }
+        />
+        <Route
+          path={AUTH_ROUTES.REGISTER}
+          element={
+            <UserLayout>
+              <RegisterPage />
             </UserLayout>
           }
         />
@@ -61,7 +70,7 @@ function App() {
           element={
             <UserLayout>
               <ProtectedRoute>
-                <SessionDetailPage sessionId={1} />
+                <SessionDetailPage />
               </ProtectedRoute>
             </UserLayout>
           }
