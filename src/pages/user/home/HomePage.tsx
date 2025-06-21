@@ -47,7 +47,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   size="lg"
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
+                  className="bg-green-600! hover:bg-green-700 text-white px-8 py-4 text-lg"
                 >
                   Start Your Quit Journey
                 </Button>
@@ -77,7 +77,7 @@ export default function HomePage() {
             <div className="relative">
               <div className="bg-gradient-to-br from-green-400 to-blue-500 rounded-3xl p-8 shadow-2xl">
                 <img
-                  src="/placeholder.svg?height=400&width=500"
+                  src="/banner.jpg"
                   alt="Happy person celebrating smoke-free life"
                   width={500}
                   height={400}
@@ -338,7 +338,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 text-lg"
+                className="border-white bg-green-600!  text-white hover:bg-white hover:text-white px-8 py-4 text-lg"
               >
                 Schedule Consultation
               </Button>

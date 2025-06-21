@@ -10,6 +10,7 @@ import { AUTH_ROUTES } from "./routes/auth/auth";
 import { ADMIN_ROUTES } from "./routes/admin/admin";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
 import UserLayout from "./layouts/user/layout";
+import RegisterPage from "./pages/auth/RegisterPage";
 function App() {
   return (
     <Router>
@@ -28,6 +29,14 @@ function App() {
           element={
             <UserLayout>
               <LoginPage />
+            </UserLayout>
+          }
+        />
+        <Route
+          path={AUTH_ROUTES.REGISTER}
+          element={
+            <UserLayout>
+              <RegisterPage />
             </UserLayout>
           }
         />
