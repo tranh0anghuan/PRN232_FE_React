@@ -2,13 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { AUTH_ROUTES } from "@/routes/auth/auth";
+import { USER_ROUTES } from "@/routes/user/user";
 import { logout } from "@/services/auth/auth";
-import { isLoggedIn } from "@/utils/token/auth";
+import { getUserFromToken, isLoggedIn } from "@/utils/token/auth";
 import { Heart, User, LogOut, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Header() {
   const userLoggedIn = isLoggedIn();
+  const currentUser = getUserFromToken();
 
   const handleLogout = () => {
     logout();
@@ -63,6 +65,26 @@ export function Header() {
               Community
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
             </Link>
+            {currentUser && (
+              <>
+              <Link
+                to={USER_ROUTES.COACH_PROFILE}
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              >
+                Coach
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+              </Link>
+              <Link
+                to={USER_ROUTES.USER_SESSION}
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              >
+                Sessions
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+              </Link>
+              
+              </>
+
+            )}
             <Link
               to="#"
               className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"

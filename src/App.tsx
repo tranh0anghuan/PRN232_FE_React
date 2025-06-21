@@ -10,6 +10,10 @@ import { AUTH_ROUTES } from "./routes/auth/auth";
 import { ADMIN_ROUTES } from "./routes/admin/admin";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
 import UserLayout from "./layouts/user/layout";
+import CoachProfilePage from "./pages/user/coach-profile/CoachProfilePage";
+import UserSessionsPage from "./pages/user/session/UserSessionsPage";
+import CoachSessionsPage from "./pages/user/session/CoachSessionsPage";
+import SessionDetailPage from "./pages/user/session/SessionDetailPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 function App() {
   return (
@@ -49,7 +53,51 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Tung Zone */}
 
+        <Route
+          path={USER_ROUTES.COACH_PROFILE}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <CoachProfilePage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.SESSION_DETAIL}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <SessionDetailPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path={USER_ROUTES.USER_SESSION}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserSessionsPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.SESSION_MANAGEMENT}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <CoachSessionsPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        {/*   END Tung Zone */}
         <Route
           path={ADMIN_ROUTES.MAIN}
           element={
