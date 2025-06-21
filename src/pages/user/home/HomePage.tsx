@@ -16,7 +16,7 @@ import {
   Heart,
   Phone,
 } from "lucide-react";
-import { getUserFromToken } from "@/utils/auth";
+import { getUserFromToken } from "@/utils/token/auth";
 
 export default function HomePage() {
   const user = getUserFromToken();

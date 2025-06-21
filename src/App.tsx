@@ -10,9 +10,10 @@ import { AUTH_ROUTES } from "./routes/auth/auth";
 import { ADMIN_ROUTES } from "./routes/admin/admin";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
 import UserLayout from "./layouts/user/layout";
-import CoachProfileForm from "./pages/user/coach-profile/CoachProfileForm";
-import UserSessions from "./pages/user/session/UserSessions";
-import SessionManagement from "./pages/user/session/SessionManagement";
+import CoachProfilePage from "./pages/user/coach-profile/CoachProfilePage";
+import UserSessionsPage from "./pages/user/session/UserSessionsPage";
+import CoachSessionsPage from "./pages/user/session/CoachSessionsPage";
+import SessionDetailPage from "./pages/user/session/SessionDetailPage";
 function App() {
   return (
     <Router>
@@ -26,7 +27,14 @@ function App() {
             </UserLayout>
           }
         />
-        <Route path={AUTH_ROUTES.LOGIN} element={<LoginPage />} />
+        <Route
+          path={AUTH_ROUTES.LOGIN}
+          element={
+            <UserLayout>
+              <LoginPage />
+            </UserLayout>
+          }
+        />
 
         <Route
           path={USER_ROUTES.PROFILE}
@@ -36,31 +44,51 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        {/* Tung Zone */}
+
+        <Route
           path={USER_ROUTES.COACH_PROFILE}
           element={
-            <ProtectedRoute>
-              <CoachProfileForm />
-            </ProtectedRoute>
+            <UserLayout>
+              <ProtectedRoute>
+                <CoachProfilePage />
+              </ProtectedRoute>
+            </UserLayout>
           }
         />
         <Route
-          path={USER_ROUTES.USER_SESSIONS}
+          path={USER_ROUTES.SESSION_DETAIL}
           element={
-            <ProtectedRoute>
-              <UserSessions />
-            </ProtectedRoute>
+            <UserLayout>
+              <ProtectedRoute>
+                <SessionDetailPage sessionId={1} />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path={USER_ROUTES.USER_SESSION}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserSessionsPage />
+              </ProtectedRoute>
+            </UserLayout>
           }
         />
         <Route
           path={USER_ROUTES.SESSION_MANAGEMENT}
           element={
-            <ProtectedRoute>
-              <SessionManagement />
-            </ProtectedRoute>
+            <UserLayout>
+              <ProtectedRoute>
+                <CoachSessionsPage />
+              </ProtectedRoute>
+            </UserLayout>
           }
         />
 
+        {/*   END Tung Zone */}
         <Route
           path={ADMIN_ROUTES.MAIN}
           element={
