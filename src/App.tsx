@@ -8,11 +8,13 @@ import AdminPage from "./pages/admin/main/AdminPage";
 import { USER_ROUTES } from "./routes/user/user";
 import { AUTH_ROUTES } from "./routes/auth/auth";
 import { ADMIN_ROUTES } from "./routes/admin/admin";
+import NotFoundPage from "./pages/not-found/NotFoundPage";
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="*" element={<NotFoundPage />} />
         <Route path={USER_ROUTES.HOME} element={<HomePage />} />
         <Route path={AUTH_ROUTES.LOGIN} element={<LoginPage />} />
 
