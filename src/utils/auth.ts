@@ -2,8 +2,9 @@ import Cookies from 'js-cookie';
 import {jwtDecode} from 'jwt-decode';
 
 type DecodedToken = {
-  nameid: string;
-  email: string;
+  FullName: string;
+  NameIdentifier: string;
+  Email: string;
   RoleId: string | number;
   [key: string]: any;
 };
@@ -15,8 +16,9 @@ export const getUserFromToken = () => {
   try {
     const decoded = jwtDecode<DecodedToken>(token);
     return {
-      username: decoded.nameid,
-      email: decoded.email,
+      username: decoded.NameIdentifier,
+      fullName: decoded.FullName,
+      email: decoded.Email,
       roleId: Number(decoded.RoleId),
     };
   } catch {
