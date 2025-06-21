@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { isAdmin } from "../utils/auth";
+import { isAdmin } from "../utils/token/auth";
 
 import type { ReactNode } from "react";
 import { USER_ROUTES } from "../routes/user/user";
