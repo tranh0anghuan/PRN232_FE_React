@@ -1,3 +1,4 @@
 export const AUTH_API_ROUTES = {
-  LOGIN: '/Authen/login',
+  LOGIN: "/Authen/login",
+  REGISTER: "/Authen/register",
 };

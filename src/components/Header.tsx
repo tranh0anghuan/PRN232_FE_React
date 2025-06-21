@@ -98,7 +98,7 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link to="/register">
+                <Link to={AUTH_ROUTES.REGISTER}>
                   <Button
                     variant="ghost"
                     className="relative text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 group"

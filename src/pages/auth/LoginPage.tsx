@@ -17,6 +17,8 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showErrorToast, showSuccessToast } from "@/utils/toast/toast";
 import { login } from "@/services/auth/auth";
+import { AUTH_ROUTES } from "@/routes/auth/auth";
+import { isLoggedIn } from "@/utils/token/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -30,6 +32,10 @@ export default function LoginPage() {
   }>({});
 
   const navigate = useNavigate();
+
+  if (isLoggedIn()) {
+    window.location.href = "/";
+  }
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -61,18 +67,10 @@ export default function LoginPage() {
     setErrors({});
 
     try {
-      const response = await login(email, password);
+      await login(email, password);
 
-      if (response.code === 200) {
-        showSuccessToast("Login Successful");
-
-        // Redirect to dashboard or home page
-        navigate("/");
-      } else {
-        setErrors({
-          general: response.message || "Login failed. Please try again.",
-        });
-      }
+      showSuccessToast("Login Successful");
+      navigate("/");
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message ||
@@ -204,7 +202,7 @@ export default function LoginPage() {
 
               {/* Sign Up Link */}
               <div className="text-center">
-                <Link to="/register">
+                <Link to={AUTH_ROUTES.REGISTER}>
                   <Button
                     variant="outline"
                     className="w-full border-green-600 text-green-600 hover:bg-green-50"
