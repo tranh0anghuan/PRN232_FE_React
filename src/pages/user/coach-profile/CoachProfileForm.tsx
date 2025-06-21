@@ -9,8 +9,10 @@ import { Label } from "@radix-ui/react-label"
 import { Input } from "../../../components/ui/input"
 import { Textarea } from "../../../components/ui/textarea"
 import { Button } from "../../../components/ui/button"
+import { getUserFromToken } from "@/utils/auth"
 
-export default function CoachProfileForm({ currentUser }: { currentUser: any }) {
+export default function CoachProfileForm() {
+  const currentUser = getUserFromToken()
   const [profileData, setProfileData] = useState({
     username: currentUser?.username || "",
     specialization: "",
@@ -29,7 +31,7 @@ export default function CoachProfileForm({ currentUser }: { currentUser: any }) 
 
   const fetchCoachProfile = async () => {
     try {
-      const response = await coachService.getProfileByUsername(currentUser.username)
+      const response = await coachService.getProfileByUsername(currentUser?.username || "")
       if (response.success) {
         setExistingProfile(response.data)
         setProfileData(response.data)

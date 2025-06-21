@@ -14,8 +14,10 @@ import { Calendar, Clock, User, Star, Search } from "lucide-react"
 import { sessionService } from "../../../services/session/sessionService"
 import { ratingService } from "../../../services/rating/ratingService"
 import { toast } from "sonner"
+import { getUserFromToken } from "@/utils/auth"
 
-export default function UserSessions({ currentUser }: { currentUser: any }) {
+export default function UserSessions() {
+    const currentUser = getUserFromToken()
   const [availableSessions, setAvailableSessions] = useState([])
   const [mySessions, setMySessions] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -52,7 +54,7 @@ export default function UserSessions({ currentUser }: { currentUser: any }) {
     try {
       const response = await sessionService.getAllSessions({ pageIndex: 1, pageSize: 50 })
       if (response.success) {
-        const mySessions = response.data.filter((session: any) => session.clientUsername === currentUser.username)
+        const mySessions = response.data.filter((session: any) => session.clientUsername === currentUser?.username)
         setMySessions(mySessions)
       }
     } catch (error: any) {
@@ -64,7 +66,7 @@ export default function UserSessions({ currentUser }: { currentUser: any }) {
     try {
       await sessionService.joinSession({
         sessionId,
-        clientUsername: currentUser.username,
+        clientUsername: currentUser?.username,
       })
       toast("Tham gia thành công")
       fetchAvailableSessions()

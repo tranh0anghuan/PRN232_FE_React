@@ -19,8 +19,10 @@ import {
 import { toast } from "sonner"
 import { Calendar, Clock, Users, Star, Plus, Edit, Trash2 } from "lucide-react"
 import { sessionService } from "../../../services/session/sessionService"
+import { getUserFromToken } from "@/utils/auth"
 
-export default function SessionManagement({ currentUser }: { currentUser: any }) {
+export default function SessionManagement() {
+    const currentUser = getUserFromToken()
   const [sessions, setSessions] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -44,7 +46,7 @@ export default function SessionManagement({ currentUser }: { currentUser: any })
     setIsLoading(true)
     try {
       const response = await sessionService.getAllSessions({
-        coachUsername: currentUser.username,
+        coachUsername: currentUser?.username || "",
         pageIndex: 1,
         pageSize: 50,
       })

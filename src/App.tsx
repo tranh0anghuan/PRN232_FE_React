@@ -9,13 +9,23 @@ import { USER_ROUTES } from "./routes/user/user";
 import { AUTH_ROUTES } from "./routes/auth/auth";
 import { ADMIN_ROUTES } from "./routes/admin/admin";
 import NotFoundPage from "./pages/not-found/NotFoundPage";
-
+import UserLayout from "./layouts/user/layout";
+import CoachProfileForm from "./pages/user/coach-profile/CoachProfileForm";
+import UserSessions from "./pages/user/session/UserSessions";
+import SessionManagement from "./pages/user/session/SessionManagement";
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="*" element={<NotFoundPage />} />
-        <Route path={USER_ROUTES.HOME} element={<HomePage />} />
+        <Route
+          path={USER_ROUTES.HOME}
+          element={
+            <UserLayout>
+              <HomePage />
+            </UserLayout>
+          }
+        />
         <Route path={AUTH_ROUTES.LOGIN} element={<LoginPage />} />
 
         <Route
@@ -23,6 +33,30 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path={USER_ROUTES.COACH_PROFILE}
+          element={
+            <ProtectedRoute>
+              <CoachProfileForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={USER_ROUTES.USER_SESSIONS}
+          element={
+            <ProtectedRoute>
+              <UserSessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={USER_ROUTES.SESSION_MANAGEMENT}
+          element={
+            <ProtectedRoute>
+              <SessionManagement />
             </ProtectedRoute>
           }
         />
