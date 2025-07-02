@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import HomePage from "./pages/user/home/HomePage";
+import HomePage from "./pages/user/home/page";
 import ProfilePage from "./pages/user/profile/ProfilePage";
 import LoginPage from "./pages/auth/LoginPage";
 import AdminPage from "./pages/admin/main/AdminPage";
@@ -15,6 +15,9 @@ import UserSessionsPage from "./pages/user/session/UserSessionsPage";
 import CoachSessionsPage from "./pages/user/session/CoachSessionsPage";
 import SessionDetailPage from "./pages/user/session/SessionDetailPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import { AdminLayout } from "./layouts/admin/layout";
+import SmokeStatusPage from "./pages/user/smoke-status/page";
+import SmokeStatusDetailPage from "./pages/user/smoke-status/detail/page";
 function App() {
   return (
     <Router>
@@ -53,6 +56,28 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path={USER_ROUTES.SMOKE_STATUS}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <SmokeStatusPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.SMOKE_STATUS_DETAIL}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <SmokeStatusDetailPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
         {/* Tung Zone */}
 
         <Route
@@ -101,9 +126,11 @@ function App() {
         <Route
           path={ADMIN_ROUTES.MAIN}
           element={
-            <AdminRoute>
-              <AdminPage />
-            </AdminRoute>
+            <AdminLayout>
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            </AdminLayout>
           }
         />
       </Routes>

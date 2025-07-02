@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useState } from "react";
@@ -18,7 +16,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { showErrorToast, showSuccessToast } from "@/utils/toast/toast";
 import { login } from "@/services/auth/auth";
 import { AUTH_ROUTES } from "@/routes/auth/auth";
-import { isLoggedIn } from "@/utils/token/auth";
+import { getUserFromToken, isLoggedIn } from "@/utils/token/auth";
+import { ADMIN_ROUTES } from "@/routes/admin/admin";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,10 +31,6 @@ export default function LoginPage() {
   }>({});
 
   const navigate = useNavigate();
-
-  if (isLoggedIn()) {
-    window.location.href = "/";
-  }
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -69,7 +64,15 @@ export default function LoginPage() {
     try {
       await login(email, password);
 
-      showSuccessToast("Login Successful");
+      const user = getUserFromToken();
+
+      console.log(user);
+      if (user?.roleId !== 3) {
+        navigate("/");
+      } else {
+        window.location.href = ADMIN_ROUTES.MAIN;
+      }
+
       navigate("/");
     } catch (error: any) {
       const errorMessage =

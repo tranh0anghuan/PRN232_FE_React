@@ -1,6 +1,6 @@
 export const ADMIN_ROUTES = {
   USERS: {
-    GET_ALL: "/users/get-all",
+    GET_ALL: "/admin/users/get-all",
   },
   MAIN: "/admin/main",
 };

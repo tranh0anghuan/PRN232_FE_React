@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, Loader2, Upload, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { showErrorToast, showSuccessToast } from "@/utils/toast/toast";
 import { register } from "@/services/auth/auth";
 import { isLoggedIn } from "@/utils/token/auth";
+import { toast } from "sonner";
 
 interface FormData {
   username: string;
@@ -242,8 +242,9 @@ export default function RegisterPage() {
         phoneNumber: formData.phoneNumber,
         avatarFile: formData.avatarFile,
       });
-
-      showSuccessToast("Registration successful! Please login to continue.");
+      toast(
+        "Registration successful, please check your email to verify your account."
+      );
       setTimeout(() => {
         navigate("/login");
       }, 5000);
@@ -254,7 +255,6 @@ export default function RegisterPage() {
         "An error occurred during registration. Please try again.";
 
       setErrors({ general: errorMessage });
-      showErrorToast(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -476,9 +476,6 @@ export default function RegisterPage() {
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">
-                          Prefer not to say
-                        </SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.gender && (
