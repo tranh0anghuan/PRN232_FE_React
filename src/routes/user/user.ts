@@ -6,5 +6,6 @@ export const USER_ROUTES = {
   COACH_PROFILE: "/coach-profile",
   SESSION_DETAIL: "/session-detail/:id",
   COACH_STATISTIC: "/coach-statistic",
-
+  SMOKE_STATUS: "/smoke-status",
+  SMOKE_STATUS_DETAIL: "/smoke-status/detail",
 };

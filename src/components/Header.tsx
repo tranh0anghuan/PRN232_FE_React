@@ -1,11 +1,27 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { AUTH_ROUTES } from "@/routes/auth/auth";
 import { USER_ROUTES } from "@/routes/user/user";
 import { logout } from "@/services/auth/auth";
 import { getUserFromToken, isLoggedIn } from "@/utils/token/auth";
-import { Heart, User, LogOut, Sparkles } from "lucide-react";
+import {
+  Heart,
+  User,
+  LogOut,
+  Sparkles,
+  Settings,
+  UserCircle,
+  ChevronDown,
+  Cigarette,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Header() {
@@ -38,56 +54,54 @@ export function Header() {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link
-              to="#"
-              className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              to="/"
+              className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
             >
               Home
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
             </Link>
             <Link
               to="#"
-              className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
             >
               Programs
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
             </Link>
             <Link
               to="#"
-              className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
             >
               Resources
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
             </Link>
             <Link
               to="#"
-              className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
             >
               Community
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
             </Link>
             {currentUser && (
               <>
-              <Link
-                to={USER_ROUTES.COACH_PROFILE}
-                className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
-              >
-                Coach
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-              <Link
-                to={USER_ROUTES.USER_SESSION}
-                className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
-              >
-                Sessions
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
-              
+                <Link
+                  to={USER_ROUTES.COACH_PROFILE}
+                  className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+                >
+                  Coach
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                </Link>
+                <Link
+                  to={USER_ROUTES.USER_SESSION}
+                  className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+                >
+                  Sessions
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                </Link>
               </>
-
             )}
             <Link
               to="#"
-              className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 relative group"
+              className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
             >
               About
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
@@ -98,20 +112,60 @@ export function Header() {
           <div className="flex items-center space-x-3">
             {userLoggedIn ? (
               <>
-                <Link to="/dashboard">
-                  <Button
-                    variant="ghost"
-                    className="relative text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 group"
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 group"
+                    >
+                      <User className="h-4 w-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
+                      Profile
+                      <ChevronDown className="h-3 w-3 ml-1 transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-56 bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-lg"
                   >
-                    <User className="h-4 w-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
-                    Profile
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </Button>
-                </Link>
+                    <DropdownMenuLabel className="text-gray-700">
+                      My Account
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                      >
+                        <UserCircle className="h-4 w-4 mr-2" />
+                        View Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to={USER_ROUTES.SMOKE_STATUS}
+                        className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                      >
+                        <Cigarette className="h-4 w-4 mr-2" />
+                        Smoke Status
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/settings"
+                        className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button
                   variant="outline"
                   onClick={handleLogout}
-                  className="relative text-red-600 border-red-200 hover:border-red-300 font-medium transition-all duration-300 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:shadow-md group overflow-hidden"
+                  className="relative text-red-600 border-red-200 hover:border-red-300 font-medium transition-all duration-300 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:shadow-md group overflow-hidden bg-transparent"
                 >
                   <LogOut className="h-4 w-4 mr-2 transition-transform duration-300 group-hover:scale-110" />
                   Sign Out
