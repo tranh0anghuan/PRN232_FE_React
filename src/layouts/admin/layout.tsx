@@ -13,7 +13,6 @@ import {
   Heart,
   Phone,
   Bell,
-  Search,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +32,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -67,6 +64,11 @@ const data = {
     {
       title: "Users",
       url: ADMIN_ROUTES.USERS.GET_ALL,
+      icon: Users,
+    },
+    {
+      title: "Coach Profile",
+      url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
       icon: Users,
     },
     {
