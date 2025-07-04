@@ -18,6 +18,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import { AdminLayout } from "./layouts/admin/layout";
 import SmokeStatusPage from "./pages/user/smoke-status/page";
 import SmokeStatusDetailPage from "./pages/user/smoke-status/detail/page";
+import CoachProfileManagePage from "./pages/admin/coach-profile/coach-management";
 function App() {
   return (
     <Router>
@@ -122,6 +123,17 @@ function App() {
           }
         />
 
+
+        <Route
+          path={ADMIN_ROUTES.COACH_PROFILE.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <CoachProfileManagePage />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
         {/*   END Tung Zone */}
         <Route
           path={ADMIN_ROUTES.MAIN}
