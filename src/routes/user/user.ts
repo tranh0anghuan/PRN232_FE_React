@@ -7,5 +7,13 @@ export const USER_ROUTES = {
   SESSION_DETAIL: "/session-detail/:id",
   COACH_STATISTIC: "/coach-statistic",
   SMOKE_STATUS: "/smoke-status",
+  QUIT_PLANS: "/quit-plans",
+  QUIT_PLAN_PHASES: "/quit-plans/:id/phases",
   SMOKE_STATUS_DETAIL: "/smoke-status/detail",
+  PROGRESS_TRACKING: {
+    DASHBOARD:"/progress-tracking/dashboard",
+    DAILY_LOG:"/progress-tracking/daily-log",
+    HISTORY:"/progress-tracking/history",
+    IMPROVEMENTS:"/progress-tracking/improvements",
+  }
 };

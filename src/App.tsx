@@ -18,6 +18,12 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import { AdminLayout } from "./layouts/admin/layout";
 import SmokeStatusPage from "./pages/user/smoke-status/page";
 import SmokeStatusDetailPage from "./pages/user/smoke-status/detail/page";
+import QuitPlansPage from "./pages/user/quit-plan/page";
+import QuitPlanPhasesPage from "./pages/user/quit-plan/phases/page";
+import UserProgressTrackingDashboard from "./pages/user/progress-tracking/dashboard/page";
+import UserProgressTrackingDailyLog from "./pages/user/progress-tracking/daily-log/page";
+import UserProgressTrackingHistory from "./pages/user/progress-tracking/history/page";
+import UserProgressTrackingImprovements from "./pages/user/progress-tracking/improvements/page";
 function App() {
   return (
     <Router>
@@ -73,6 +79,66 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <SmokeStatusDetailPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.QUIT_PLANS}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <QuitPlansPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.QUIT_PLAN_PHASES}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <QuitPlanPhasesPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.PROGRESS_TRACKING.DASHBOARD}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserProgressTrackingDashboard />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.PROGRESS_TRACKING.DAILY_LOG}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserProgressTrackingDailyLog />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.PROGRESS_TRACKING.HISTORY}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserProgressTrackingHistory />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.PROGRESS_TRACKING.IMPROVEMENTS}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <UserProgressTrackingImprovements />
               </ProtectedRoute>
             </UserLayout>
           }

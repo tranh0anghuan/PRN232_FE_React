@@ -27,24 +27,24 @@ export function Footer() {
 
           <div>
             <h3 className="font-semibold mb-4">Programs</h3>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 ">
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Quit Plan
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Group Support
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   One-on-One Coaching
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Family Support
                 </Link>
               </li>
@@ -53,24 +53,24 @@ export function Footer() {
 
           <div>
             <h3 className="font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 ">
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Quit Tips
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Health Benefits
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   Success Stories
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-white">
+                <Link to="#" className="hover:text-white! text-gray-400!">
                   FAQ
                 </Link>
               </li>
@@ -97,14 +97,14 @@ export function Footer() {
           <p className="text-gray-400 text-sm">
             © 2024 QuitWell. All rights reserved.
           </p>
-          <div className="flex space-x-6 text-sm text-gray-400 mt-4 md:mt-0">
-            <Link to="#" className="hover:text-white">
+          <div className="flex space-x-6 text-sm  mt-4 md:mt-0">
+            <Link to="#" className="hover:text-white! text-gray-400!">
               Privacy Policy
             </Link>
-            <Link to="#" className="hover:text-white">
+            <Link to="#" className="hover:text-white! text-gray-400!">
               Terms of Service
             </Link>
-            <Link to="#" className="hover:text-white">
+            <Link to="#" className="hover:text-white! text-gray-400!">
               Contact
             </Link>
           </div>
