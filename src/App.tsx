@@ -24,6 +24,7 @@ import UserProgressTrackingDashboard from "./pages/user/progress-tracking/dashbo
 import UserProgressTrackingDailyLog from "./pages/user/progress-tracking/daily-log/page";
 import UserProgressTrackingHistory from "./pages/user/progress-tracking/history/page";
 import UserProgressTrackingImprovements from "./pages/user/progress-tracking/improvements/page";
+import CoachProfileManagePage from "./pages/admin/coach-profile/coach-management";
 function App() {
   return (
     <Router>
@@ -188,6 +189,17 @@ function App() {
           }
         />
 
+
+        <Route
+          path={ADMIN_ROUTES.COACH_PROFILE.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <CoachProfileManagePage />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
         {/*   END Tung Zone */}
         <Route
           path={ADMIN_ROUTES.MAIN}
