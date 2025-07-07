@@ -25,6 +25,7 @@ import UserProgressTrackingDailyLog from "./pages/user/progress-tracking/daily-l
 import UserProgressTrackingHistory from "./pages/user/progress-tracking/history/page";
 import UserProgressTrackingImprovements from "./pages/user/progress-tracking/improvements/page";
 import CoachProfileManagePage from "./pages/admin/coach-profile/coach-management";
+import BlogPostManagement from "./pages/admin/blog-post/page";
 function App() {
   return (
     <Router>
@@ -189,7 +190,6 @@ function App() {
           }
         />
 
-
         <Route
           path={ADMIN_ROUTES.COACH_PROFILE.MANAGE}
           element={
@@ -207,6 +207,16 @@ function App() {
             <AdminLayout>
               <AdminRoute>
                 <AdminPage />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTES.BLOG_POST.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <BlogPostManagement />
               </AdminRoute>
             </AdminLayout>
           }
