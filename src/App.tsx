@@ -27,6 +27,9 @@ import UserProgressTrackingImprovements from "./pages/user/progress-tracking/imp
 import CoachProfileManagePage from "./pages/admin/coach-profile/coach-management";
 import BlogPostManagement from "./pages/admin/blog-post/page";
 import AchievementManagement from "./pages/admin/achievements/page";
+import CommunityManagement from "./pages/admin/community/page";
+import PostManagement from "./pages/admin/post/page";
+import MotivationalMessageManagement from "./pages/admin/motivational-message/page";
 function App() {
   return (
     <Router>
@@ -228,6 +231,36 @@ function App() {
             <AdminLayout>
               <AdminRoute>
                 <AchievementManagement />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTES.COMMUNITY.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <CommunityManagement />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTES.POST.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <PostManagement />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTES.MOTIVATIONAL_MESSAGE.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <MotivationalMessageManagement />
               </AdminRoute>
             </AdminLayout>
           }

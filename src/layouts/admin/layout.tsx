@@ -14,6 +14,9 @@ import {
   Phone,
   Bell,
   NotebookPen,
+  BookUser,
+  BookOpen,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -67,7 +70,7 @@ const data = {
     {
       title: "Coach Profile",
       url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
-      icon: Users,
+      icon: BookUser,
     },
     {
       title: "Blog Post",
@@ -80,24 +83,19 @@ const data = {
       icon: Trophy,
     },
     {
-      title: "Programs",
-      url: "/admin/programs",
-      icon: Calendar,
+      title: "Communities",
+      url: ADMIN_ROUTES.COMMUNITY.MANAGE,
+      icon: Users,
     },
     {
-      title: "Success Stories",
-      url: "/admin/stories",
-      icon: Trophy,
+      title: "Community Posts",
+      url: ADMIN_ROUTES.POST.MANAGE,
+      icon: BookOpen,
     },
     {
-      title: "Crisis Support",
-      url: "/admin/crisis",
-      icon: Phone,
-    },
-    {
-      title: "Health Resources",
-      url: "/admin/resources",
-      icon: Heart,
+      title: "Motivational Message",
+      url: ADMIN_ROUTES.MOTIVATIONAL_MESSAGE.MANAGE,
+      icon: MessageCircleHeart,
     },
   ],
   navSettings: [

@@ -9,4 +9,13 @@ export const ADMIN_ROUTES = {
   ACHIEVEMENT: {
     MANAGE: "/admin/achievement/manage",
   },
+  COMMUNITY: {
+    MANAGE: "/admin/community/manage",
+  },
+  POST: {
+    MANAGE: "/admin/post/manage",
+  },
+  MOTIVATIONAL_MESSAGE: {
+    MANAGE: "/admin/motivational-message/manage",
+  },
 };
