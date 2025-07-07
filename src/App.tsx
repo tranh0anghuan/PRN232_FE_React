@@ -26,6 +26,7 @@ import UserProgressTrackingHistory from "./pages/user/progress-tracking/history/
 import UserProgressTrackingImprovements from "./pages/user/progress-tracking/improvements/page";
 import CoachProfileManagePage from "./pages/admin/coach-profile/coach-management";
 import BlogPostManagement from "./pages/admin/blog-post/page";
+import AchievementManagement from "./pages/admin/achievements/page";
 function App() {
   return (
     <Router>
@@ -217,6 +218,16 @@ function App() {
             <AdminLayout>
               <AdminRoute>
                 <BlogPostManagement />
+              </AdminRoute>
+            </AdminLayout>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTES.ACHIEVEMENT.MANAGE}
+          element={
+            <AdminLayout>
+              <AdminRoute>
+                <AchievementManagement />
               </AdminRoute>
             </AdminLayout>
           }

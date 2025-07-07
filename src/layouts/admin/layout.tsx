@@ -58,23 +58,27 @@ const data = {
       icon: Home,
     },
     {
-      title: "Blog Post",
-      url: ADMIN_ROUTES.BLOG_POST.MANAGE,
-      icon: NotebookPen,
-    },
-
-    {
-      title: "Coach Profile",
-      url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
-      icon: Users,
-    },
-    {
       title: "Support",
       url: "/admin/support",
       icon: MessageSquare,
     },
   ],
   navSecondary: [
+    {
+      title: "Coach Profile",
+      url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
+      icon: Users,
+    },
+    {
+      title: "Blog Post",
+      url: ADMIN_ROUTES.BLOG_POST.MANAGE,
+      icon: NotebookPen,
+    },
+    {
+      title: "Achievements",
+      url: ADMIN_ROUTES.ACHIEVEMENT.MANAGE,
+      icon: Trophy,
+    },
     {
       title: "Programs",
       url: "/admin/programs",

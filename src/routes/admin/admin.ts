@@ -6,4 +6,7 @@ export const ADMIN_ROUTES = {
   BLOG_POST: {
     MANAGE: "/admin/blog-post/manage",
   },
+  ACHIEVEMENT: {
+    MANAGE: "/admin/achievement/manage",
+  },
 };
