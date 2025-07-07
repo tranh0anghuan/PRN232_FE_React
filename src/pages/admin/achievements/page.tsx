@@ -46,43 +46,41 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  FileText,
-  Globe,
-  Clock,
-  BarChart3,
+  Trophy,
+  Star,
+  Target,
+  Award,
   Edit,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { blogPostService } from "@/services/admin/blog-post/service";
+import { achievementService } from "@/services/admin/achievement/service";
 
-interface BlogPost {
-  blogId: number;
-  authorUsername: string;
-  title: string;
-  content: string;
-  featuredImage: string;
-  summary: string;
+interface Achievement {
+  achievementId: number;
+  name: string;
+  description: string;
   category: string;
-  tags: string;
-  viewCount: number;
-  isPublished: boolean;
-  publishedAt: string | null;
+  pointsAwarded: number;
+  badgeImage: string;
+  criteria: string;
+  thresholdValue: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 type SortField =
-  | "title"
-  | "authorUsername"
+  | "name"
   | "category"
-  | "viewCount"
-  | "isPublished"
+  | "pointsAwarded"
+  | "thresholdValue"
+  | "isActive"
   | "createdAt";
 type SortOrder = "asc" | "desc";
 
-export default function BlogPostManagement() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+export default function AchievementManagement() {
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -90,50 +88,49 @@ export default function BlogPostManagement() {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [selectedAchievement, setSelectedAchievement] =
+    useState<Achievement | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [newPost, setNewPost] = useState({
-    authorUsername: "",
-    title: "",
-    content: "",
-    featuredImage: "",
-    summary: "",
+  const [newAchievement, setNewAchievement] = useState({
+    name: "",
+    description: "",
     category: "",
-    tags: "",
+    pointsAwarded: 0,
+    badgeImage: null as File | null,
+    criteria: "",
+    thresholdValue: 0,
   });
-
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
-  const [editPost, setEditPost] = useState({
-    blogId: 0,
-    authorUsername: "",
-    title: "",
-    content: "",
-    featuredImage: "",
-    summary: "",
+  const [editAchievement, setEditAchievement] = useState({
+    achievementId: 0,
+    name: "",
+    description: "",
     category: "",
-    tags: "",
-    isPublished: false as boolean,
-    publishedAt: null as string | null,
+    pointsAwarded: 0,
+    badgeImage: null as File | null,
+    badgeImageUrl: "", // Keep existing URL for display
+    criteria: "",
+    thresholdValue: 0,
+    isActive: true,
   });
 
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchPosts();
+    fetchAchievements();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchAchievements = async () => {
     try {
       setLoading(true);
-      const response = await blogPostService.getAllBlogPost();
-      setPosts(response);
+      const response = await achievementService.getAllAchievements();
+      setAchievements(response.data);
     } catch (error: any) {
-      toast.error("Lỗi khi tải danh sách bài viết", {
+      toast.error("Lỗi khi tải danh sách thành tựu", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -160,25 +157,29 @@ export default function BlogPostManagement() {
   };
 
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(posts.map((post) => post.category))];
+    const uniqueCategories = [
+      ...new Set(achievements.map((achievement) => achievement.category)),
+    ];
     return uniqueCategories.filter(Boolean);
-  }, [posts]);
+  }, [achievements]);
 
-  const filteredAndSortedPosts = useMemo(() => {
-    const filtered = posts.filter((post) => {
+  const filteredAndSortedAchievements = useMemo(() => {
+    const filtered = achievements.filter((achievement) => {
       const matchesSearch =
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.authorUsername.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchTerm.toLowerCase());
+        achievement.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        achievement.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        achievement.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        achievement.criteria.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter === "published" && post.isPublished) ||
-        (statusFilter === "draft" && !post.isPublished);
+        (statusFilter === "active" && achievement.isActive) ||
+        (statusFilter === "inactive" && !achievement.isActive);
 
       const matchesCategory =
-        categoryFilter === "all" || post.category === categoryFilter;
+        categoryFilter === "all" || achievement.category === categoryFilter;
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
@@ -202,22 +203,34 @@ export default function BlogPostManagement() {
     });
 
     return filtered;
-  }, [posts, searchTerm, statusFilter, categoryFilter, sortField, sortOrder]);
+  }, [
+    achievements,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    sortField,
+    sortOrder,
+  ]);
 
-  const paginatedPosts = useMemo(() => {
+  const paginatedAchievements = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedPosts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredAndSortedPosts, currentPage]);
+    return filteredAndSortedAchievements.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+  }, [filteredAndSortedAchievements, currentPage]);
 
-  const totalPages = Math.ceil(filteredAndSortedPosts.length / itemsPerPage);
+  const totalPages = Math.ceil(
+    filteredAndSortedAchievements.length / itemsPerPage
+  );
 
-  const handleViewDetail = async (blogId: number) => {
+  const handleViewDetail = async (achievementId: number) => {
     try {
       setDetailLoading(true);
-      const response = await blogPostService.getById(blogId);
-      setSelectedPost(response);
+      const response = await achievementService.getById(achievementId);
+      setSelectedAchievement(response.data || response);
     } catch (error: any) {
-      toast.error("Lỗi khi tải chi tiết bài viết", {
+      toast.error("Lỗi khi tải chi tiết thành tựu", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -225,25 +238,27 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleCreatePost = async () => {
+  const handleCreateAchievement = async () => {
     try {
       setCreateLoading(true);
-      const response = await blogPostService.createBlogPost(newPost);
-      setPosts([response, ...posts]);
+      const response = await achievementService.createAchievement(
+        newAchievement
+      );
+      setAchievements([response, ...achievements]);
       setCreateDialogOpen(false);
-      setNewPost({
-        authorUsername: "",
-        title: "",
-        content: "",
-        featuredImage: "",
-        summary: "",
+      setNewAchievement({
+        name: "",
+        description: "",
         category: "",
-        tags: "",
+        pointsAwarded: 0,
+        badgeImage: null,
+        criteria: "",
+        thresholdValue: 0,
       });
-      toast.success("Đã tạo bài viết thành công");
-      fetchPosts(); // Refresh the list
+      toast.success("Đã tạo thành tựu thành công");
+      window.location.reload();
     } catch (error: any) {
-      toast.error("Lỗi khi tạo bài viết", {
+      toast.error("Lỗi khi tạo thành tựu", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -251,34 +266,45 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleEditPost = async () => {
+  const handleEditAchievement = async () => {
     try {
       setEditLoading(true);
-      await blogPostService.updateBlogPost(editPost.blogId, {
-        title: editPost.title,
-        content: editPost.content,
-        featuredImage: editPost.featuredImage,
-        summary: editPost.summary,
-        category: editPost.category,
-        tags: editPost.tags,
-        isPublished: editPost.isPublished,
-        publishedAt: editPost.publishedAt,
+      await achievementService.updateAchievement({
+        achievementId: editAchievement.achievementId,
+        name: editAchievement.name,
+        description: editAchievement.description,
+        category: editAchievement.category,
+        pointsAwarded: editAchievement.pointsAwarded,
+        badgeImage: editAchievement.badgeImage,
+        criteria: editAchievement.criteria,
+        thresholdValue: editAchievement.thresholdValue,
+        isActive: editAchievement.isActive,
       });
-
       // Update local state
-      setPosts(
-        posts.map((post) =>
-          post.blogId === editPost.blogId
-            ? { ...post, ...editPost, updatedAt: new Date().toISOString() }
-            : post
+      setAchievements(
+        achievements.map((achievement) =>
+          achievement.achievementId === editAchievement.achievementId
+            ? {
+                ...achievement,
+                achievementId: editAchievement.achievementId,
+                name: editAchievement.name,
+                description: editAchievement.description,
+                category: editAchievement.category,
+                pointsAwarded: editAchievement.pointsAwarded,
+                badgeImage: editAchievement.badgeImageUrl, // ensure this is a string (URL)
+                criteria: editAchievement.criteria,
+                thresholdValue: editAchievement.thresholdValue,
+                isActive: editAchievement.isActive,
+                updatedAt: new Date().toISOString(),
+              }
+            : achievement
         )
       );
-
       setEditDialogOpen(false);
-      toast.success("Đã cập nhật bài viết thành công");
-      fetchPosts(); // Refresh the list
+      toast.success("Đã cập nhật thành tựu thành công");
+      fetchAchievements(); // Refresh the list
     } catch (error: any) {
-      toast.error("Lỗi khi cập nhật bài viết", {
+      toast.error("Lỗi khi cập nhật thành tựu", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -286,20 +312,23 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleDeletePost = async (blogId: number) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+  const handleDeleteAchievement = async (achievementId: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa thành tựu này?")) {
       return;
     }
 
     try {
-      setDeleteLoading(blogId);
-      await blogPostService.deleteBlogPost(blogId);
-
+      setDeleteLoading(achievementId);
+      await achievementService.deleteAchievement(achievementId);
       // Update local state
-      setPosts(posts.filter((post) => post.blogId !== blogId));
-      toast.success("Đã xóa bài viết thành công");
+      setAchievements(
+        achievements.filter(
+          (achievement) => achievement.achievementId !== achievementId
+        )
+      );
+      toast.success("Đã xóa thành tựu thành công");
     } catch (error: any) {
-      toast.error("Lỗi khi xóa bài viết", {
+      toast.error("Lỗi khi xóa thành tựu", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -307,18 +336,18 @@ export default function BlogPostManagement() {
     }
   };
 
-  const openEditDialog = (post: BlogPost) => {
-    setEditPost({
-      blogId: post.blogId,
-      authorUsername: post.authorUsername,
-      title: post.title,
-      content: post.content,
-      featuredImage: post.featuredImage,
-      summary: post.summary,
-      category: post.category,
-      tags: post.tags,
-      isPublished: post.isPublished,
-      publishedAt: post.publishedAt,
+  const openEditDialog = (achievement: Achievement) => {
+    setEditAchievement({
+      achievementId: achievement.achievementId,
+      name: achievement.name,
+      description: achievement.description,
+      category: achievement.category,
+      pointsAwarded: achievement.pointsAwarded,
+      badgeImage: null,
+      badgeImageUrl: achievement.badgeImage,
+      criteria: achievement.criteria,
+      thresholdValue: achievement.thresholdValue,
+      isActive: achievement.isActive,
     });
     setEditDialogOpen(true);
   };
@@ -334,12 +363,15 @@ export default function BlogPostManagement() {
   };
 
   const stats = useMemo(() => {
-    const total = posts.length;
-    const published = posts.filter((p) => p.isPublished).length;
-    const drafts = posts.filter((p) => !p.isPublished).length;
-    const totalViews = posts.reduce((sum, post) => sum + post.viewCount, 0);
-    return { total, published, drafts, totalViews };
-  }, [posts]);
+    const total = achievements.length;
+    const active = achievements.filter((a) => a.isActive).length;
+    const inactive = achievements.filter((a) => !a.isActive).length;
+    const totalPoints = achievements.reduce(
+      (sum, achievement) => sum + achievement.pointsAwarded,
+      0
+    );
+    return { total, active, inactive, totalPoints };
+  }, [achievements]);
 
   if (loading) {
     return (
@@ -356,10 +388,10 @@ export default function BlogPostManagement() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
-              Quản lý Blog Posts
+              Quản lý Thành tựu
             </h1>
             <p className="text-gray-600 mt-2">
-              Quản lý và xuất bản các bài viết blog về sức khỏe
+              Quản lý các thành tựu và phần thưởng trong hệ thống
             </p>
           </div>
           <div className="flex gap-3">
@@ -367,11 +399,11 @@ export default function BlogPostManagement() {
               onClick={() => setCreateDialogOpen(true)}
               className="bg-green-600! hover:bg-primary/90 text-white"
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Tạo bài viết mới
+              <Trophy className="w-4 h-4 mr-2" />
+              Tạo thành tựu mới
             </Button>
             <Button
-              onClick={fetchPosts}
+              onClick={fetchAchievements}
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10 bg-transparent"
             >
@@ -386,11 +418,11 @@ export default function BlogPostManagement() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="feature-icon-green">
-                  <FileText className="h-8 w-8" />
+                  <Trophy className="h-8 w-8" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Tổng bài viết
+                    Tổng thành tựu
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.total}
@@ -403,14 +435,14 @@ export default function BlogPostManagement() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="feature-icon-blue">
-                  <Globe className="h-8 w-8" />
+                  <CheckCircle className="h-8 w-8" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Đã xuất bản
+                    Đang hoạt động
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.published}
+                    {stats.active}
                   </p>
                 </div>
               </div>
@@ -420,12 +452,14 @@ export default function BlogPostManagement() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="feature-icon-yellow">
-                  <Clock className="h-8 w-8" />
+                  <XCircle className="h-8 w-8" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Bản nháp</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Không hoạt động
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.drafts}
+                    {stats.inactive}
                   </p>
                 </div>
               </div>
@@ -435,14 +469,14 @@ export default function BlogPostManagement() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="feature-icon-purple">
-                  <BarChart3 className="h-8 w-8" />
+                  <Star className="h-8 w-8" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Tổng lượt xem
+                    Tổng điểm thưởng
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalViews.toLocaleString()}
+                    {stats.totalPoints.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -462,7 +496,7 @@ export default function BlogPostManagement() {
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="search"
-                    placeholder="Tìm theo tiêu đề, tác giả, nội dung..."
+                    placeholder="Tìm theo tên, mô tả, tiêu chí..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -471,7 +505,7 @@ export default function BlogPostManagement() {
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">
-                  Trạng thái xuất bản
+                  Trạng thái hoạt động
                 </Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
@@ -479,8 +513,8 @@ export default function BlogPostManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất cả</SelectItem>
-                    <SelectItem value="published">Đã xuất bản</SelectItem>
-                    <SelectItem value="draft">Bản nháp</SelectItem>
+                    <SelectItem value="active">Đang hoạt động</SelectItem>
+                    <SelectItem value="inactive">Không hoạt động</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -506,8 +540,8 @@ export default function BlogPostManagement() {
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Kết quả</Label>
                 <div className="text-sm text-gray-600 pt-2">
-                  Hiển thị {paginatedPosts.length} /{" "}
-                  {filteredAndSortedPosts.length} bài viết
+                  Hiển thị {paginatedAchievements.length} /{" "}
+                  {filteredAndSortedAchievements.length} thành tựu
                 </div>
               </div>
             </div>
@@ -523,20 +557,11 @@ export default function BlogPostManagement() {
                   <TableRow>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("title")}
+                      onClick={() => handleSort("name")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Tiêu đề</span>
-                        {getSortIcon("title")}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("authorUsername")}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span>Tác giả</span>
-                        {getSortIcon("authorUsername")}
+                        <span>Tên thành tựu</span>
+                        {getSortIcon("name")}
                       </div>
                     </TableHead>
                     <TableHead
@@ -550,11 +575,20 @@ export default function BlogPostManagement() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("viewCount")}
+                      onClick={() => handleSort("pointsAwarded")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Lượt xem</span>
-                        {getSortIcon("viewCount")}
+                        <span>Điểm thưởng</span>
+                        {getSortIcon("pointsAwarded")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("thresholdValue")}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>Ngưỡng</span>
+                        {getSortIcon("thresholdValue")}
                       </div>
                     </TableHead>
                     <TableHead>Trạng thái</TableHead>
@@ -571,59 +605,68 @@ export default function BlogPostManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedPosts.map((post) => (
-                    <TableRow key={post.blogId}>
+                  {paginatedAchievements.map((achievement) => (
+                    <TableRow key={achievement.achievementId}>
                       <TableCell className="font-medium">
                         <div className="max-w-xs">
                           <div
                             className="font-semibold truncate"
-                            title={post.title}
+                            title={achievement.name}
                           >
-                            {post.title}
+                            {achievement.name}
                           </div>
                           <div
                             className="text-sm text-gray-500 truncate"
-                            title={post.summary}
+                            title={achievement.description}
                           >
-                            {post.summary}
+                            {achievement.description}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{post.authorUsername}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className="border-primary/20 text-primary bg-primary/5"
                         >
-                          {post.category}
+                          {achievement.category}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
-                          <BarChart3 className="w-4 h-4 text-gray-400" />
-                          <span>{post.viewCount.toLocaleString()}</span>
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span className="font-semibold">
+                            {achievement.pointsAwarded}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Target className="w-4 h-4 text-gray-400" />
+                          <span>{achievement.thresholdValue}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={post.isPublished ? "default" : "secondary"}
+                          variant={
+                            achievement.isActive ? "default" : "secondary"
+                          }
                           className={
-                            post.isPublished
-                              ? "bg-primary hover:bg-primary/90"
-                              : ""
+                            achievement.isActive
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-gray-400"
                           }
                         >
-                          {post.isPublished ? "Đã xuất bản" : "Bản nháp"}
+                          {achievement.isActive
+                            ? "Hoạt động"
+                            : "Không hoạt động"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <div>{formatDate(post.createdAt)}</div>
-                          {post.publishedAt && (
-                            <div className="text-gray-500">
-                              Xuất bản: {formatDate(post.publishedAt)}
-                            </div>
-                          )}
+                          <div>{formatDate(achievement.createdAt)}</div>
+                          <div className="text-gray-500">
+                            Cập nhật: {formatDate(achievement.updatedAt)}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -634,7 +677,9 @@ export default function BlogPostManagement() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewDetail(post.blogId)}
+                                onClick={() =>
+                                  handleViewDetail(achievement.achievementId)
+                                }
                                 className="w-full border-primary/20 text-primary hover:bg-primary/10"
                               >
                                 <Eye className="w-4 h-4 mr-1" />
@@ -643,9 +688,10 @@ export default function BlogPostManagement() {
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Chi tiết bài viết</DialogTitle>
+                                <DialogTitle>Chi tiết thành tựu</DialogTitle>
                                 <DialogDescription>
-                                  Thông tin chi tiết của bài viết #{post.blogId}
+                                  Thông tin chi tiết của thành tựu #
+                                  {achievement.achievementId}
                                 </DialogDescription>
                               </DialogHeader>
                               {detailLoading ? (
@@ -653,7 +699,7 @@ export default function BlogPostManagement() {
                                   <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
                                 </div>
                               ) : (
-                                selectedPost && (
+                                selectedAchievement && (
                                   <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
@@ -661,79 +707,80 @@ export default function BlogPostManagement() {
                                           ID
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.blogId}
+                                          {selectedAchievement.achievementId}
                                         </p>
                                       </div>
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Tác giả
-                                        </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.authorUsername}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Tiêu đề
-                                      </Label>
-                                      <p className="text-sm">
-                                        {selectedPost.title}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Tóm tắt
-                                      </Label>
-                                      <p className="text-sm">
-                                        {selectedPost.summary}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Nội dung
-                                      </Label>
-                                      <div className="text-sm max-h-40 overflow-y-auto bg-gray-50 p-3 rounded">
-                                        {selectedPost.content}
-                                      </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
                                           Danh mục
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.category}
+                                          {selectedAchievement.category}
                                         </p>
                                       </div>
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Tags
-                                        </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.tags}
-                                        </p>
-                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label className="font-semibold">
+                                        Tên thành tựu
+                                      </Label>
+                                      <p className="text-sm">
+                                        {selectedAchievement.name}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className="font-semibold">
+                                        Mô tả
+                                      </Label>
+                                      <p className="text-sm">
+                                        {selectedAchievement.description}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label className="font-semibold">
+                                        Tiêu chí
+                                      </Label>
+                                      <p className="text-sm">
+                                        {selectedAchievement.criteria}
+                                      </p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
-                                          Lượt xem
+                                          Điểm thưởng
                                         </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.viewCount.toLocaleString()}
+                                        <p className="text-sm font-semibold text-yellow-600">
+                                          {selectedAchievement.pointsAwarded}{" "}
+                                          điểm
                                         </p>
                                       </div>
                                       <div>
                                         <Label className="font-semibold">
-                                          Ảnh đại diện
+                                          Ngưỡng đạt được
                                         </Label>
-                                        <p
-                                          className="text-sm truncate"
-                                          title={selectedPost.featuredImage}
-                                        >
-                                          {selectedPost.featuredImage}
+                                        <p className="text-sm">
+                                          {selectedAchievement.thresholdValue}
                                         </p>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label className="font-semibold">
+                                        Hình ảnh huy hiệu
+                                      </Label>
+                                      <div className="mt-2">
+                                        {selectedAchievement.badgeImage ? (
+                                          <img
+                                            src={
+                                              selectedAchievement.badgeImage ||
+                                              "/placeholder.svg"
+                                            }
+                                            alt="Badge"
+                                            className="w-16 h-16 object-cover rounded-lg border"
+                                          />
+                                        ) : (
+                                          <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
+                                            <Award className="w-8 h-8 text-gray-400" />
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -742,7 +789,9 @@ export default function BlogPostManagement() {
                                           Ngày tạo
                                         </Label>
                                         <p className="text-sm">
-                                          {formatDate(selectedPost.createdAt)}
+                                          {formatDate(
+                                            selectedAchievement.createdAt
+                                          )}
                                         </p>
                                       </div>
                                       <div>
@@ -750,31 +799,28 @@ export default function BlogPostManagement() {
                                           Cập nhật lần cuối
                                         </Label>
                                         <p className="text-sm">
-                                          {formatDate(selectedPost.updatedAt)}
+                                          {formatDate(
+                                            selectedAchievement.updatedAt
+                                          )}
                                         </p>
                                       </div>
                                     </div>
-                                    {selectedPost.publishedAt && (
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Ngày xuất bản
-                                        </Label>
-                                        <p className="text-sm">
-                                          {formatDate(selectedPost.publishedAt)}
-                                        </p>
-                                      </div>
-                                    )}
                                     <div className="flex space-x-4 pt-4">
                                       <Badge
                                         variant={
-                                          selectedPost.isPublished
+                                          selectedAchievement.isActive
                                             ? "default"
                                             : "secondary"
                                         }
+                                        className={
+                                          selectedAchievement.isActive
+                                            ? "bg-green-500"
+                                            : ""
+                                        }
                                       >
-                                        {selectedPost.isPublished
-                                          ? "Đã xuất bản"
-                                          : "Bản nháp"}
+                                        {selectedAchievement.isActive
+                                          ? "Đang hoạt động"
+                                          : "Không hoạt động"}
                                       </Badge>
                                     </div>
                                   </div>
@@ -782,32 +828,34 @@ export default function BlogPostManagement() {
                               )}
                             </DialogContent>
                           </Dialog>
-
                           {/* Edit Button */}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openEditDialog(post)}
+                            onClick={() => openEditDialog(achievement)}
                             className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
                           >
                             <Edit className="w-4 h-4 mr-1" />
                             Chỉnh sửa
                           </Button>
-
                           {/* Delete Button */}
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDeletePost(post.blogId)}
-                            disabled={deleteLoading === post.blogId}
+                            onClick={() =>
+                              handleDeleteAchievement(achievement.achievementId)
+                            }
+                            disabled={
+                              deleteLoading === achievement.achievementId
+                            }
                             className="w-full bg-red-400!"
                           >
-                            {deleteLoading === post.blogId ? (
+                            {deleteLoading === achievement.achievementId ? (
                               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-1" />
                             ) : (
                               <Trash2 className="w-4 h-4 mr-1" />
                             )}
-                            {deleteLoading === post.blogId
+                            {deleteLoading === achievement.achievementId
                               ? "Đang xóa..."
                               : "Xóa"}
                           </Button>
@@ -818,9 +866,9 @@ export default function BlogPostManagement() {
                 </TableBody>
               </Table>
             </div>
-            {paginatedPosts.length === 0 && (
+            {paginatedAchievements.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                Không tìm thấy bài viết nào phù hợp với bộ lọc
+                Không tìm thấy thành tựu nào phù hợp với bộ lọc
               </div>
             )}
           </CardContent>
@@ -894,26 +942,29 @@ export default function BlogPostManagement() {
           </div>
         )}
 
-        {/* Create Blog Post Dialog */}
+        {/* Create Achievement Dialog */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Tạo bài viết mới</DialogTitle>
+              <DialogTitle>Tạo thành tựu mới</DialogTitle>
               <DialogDescription>
-                Điền thông tin để tạo bài viết blog mới
+                Điền thông tin để tạo thành tựu mới
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="authorUsername">Tác giả</Label>
+                  <Label htmlFor="name">Tên thành tựu</Label>
                   <Input
-                    id="authorUsername"
-                    value={newPost.authorUsername}
+                    id="name"
+                    value={newAchievement.name}
                     onChange={(e) =>
-                      setNewPost({ ...newPost, authorUsername: e.target.value })
+                      setNewAchievement({
+                        ...newAchievement,
+                        name: e.target.value,
+                      })
                     }
-                    placeholder="Nhập tên tác giả"
+                    placeholder="Nhập tên thành tựu"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
@@ -921,9 +972,12 @@ export default function BlogPostManagement() {
                   <Label htmlFor="category">Danh mục</Label>
                   <Input
                     id="category"
-                    value={newPost.category}
+                    value={newAchievement.category}
                     onChange={(e) =>
-                      setNewPost({ ...newPost, category: e.target.value })
+                      setNewAchievement({
+                        ...newAchievement,
+                        category: e.target.value,
+                      })
                     }
                     placeholder="Nhập danh mục"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -931,106 +985,158 @@ export default function BlogPostManagement() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="title">Tiêu đề</Label>
+                <Label htmlFor="description">Mô tả</Label>
                 <Input
-                  id="title"
-                  value={newPost.title}
+                  id="description"
+                  value={newAchievement.description}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, title: e.target.value })
+                    setNewAchievement({
+                      ...newAchievement,
+                      description: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tiêu đề bài viết"
+                  placeholder="Nhập mô tả thành tựu"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="summary">Tóm tắt</Label>
+                <Label htmlFor="criteria">Tiêu chí đạt được</Label>
                 <Input
-                  id="summary"
-                  value={newPost.summary}
+                  id="criteria"
+                  value={newAchievement.criteria}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, summary: e.target.value })
+                    setNewAchievement({
+                      ...newAchievement,
+                      criteria: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tóm tắt bài viết"
+                  placeholder="Nhập tiêu chí để đạt được thành tựu"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="featuredImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="featuredImage"
-                  value={newPost.featuredImage}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pointsAwarded">Điểm thưởng</Label>
+                  <Input
+                    id="pointsAwarded"
+                    type="number"
+                    value={newAchievement.pointsAwarded}
+                    onChange={(e) =>
+                      setNewAchievement({
+                        ...newAchievement,
+                        pointsAwarded: Number.parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="Nhập số điểm thưởng"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="thresholdValue">Ngưỡng đạt được</Label>
+                  <Input
+                    id="thresholdValue"
+                    type="number"
+                    value={newAchievement.thresholdValue}
+                    onChange={(e) =>
+                      setNewAchievement({
+                        ...newAchievement,
+                        thresholdValue: Number.parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="Nhập ngưỡng cần đạt"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
+                <Label htmlFor="badgeImage">Hình ảnh huy hiệu</Label>
                 <Input
-                  id="tags"
-                  value={newPost.tags}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
+                  id="badgeImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setNewAchievement({
+                      ...newAchievement,
+                      badgeImage: file,
+                    });
+                  }}
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="content">Nội dung</Label>
-                <textarea
-                  id="content"
-                  value={newPost.content}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, content: e.target.value })
-                  }
-                  placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
-                />
+                {newAchievement.badgeImage && (
+                  <div className="mt-2">
+                    <img
+                      src={
+                        URL.createObjectURL(newAchievement.badgeImage) ||
+                        "/placeholder.svg"
+                      }
+                      alt="Preview"
+                      className="w-16 h-16 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setCreateDialogOpen(false)}
+                onClick={() => {
+                  setCreateDialogOpen(false);
+                  setNewAchievement({
+                    name: "",
+                    description: "",
+                    category: "",
+                    pointsAwarded: 0,
+                    badgeImage: null,
+                    criteria: "",
+                    thresholdValue: 0,
+                  });
+                }}
                 disabled={createLoading}
               >
                 Hủy
               </Button>
               <Button
-                onClick={handleCreatePost}
-                disabled={createLoading || !newPost.title || !newPost.content}
-                className="bg-primary hover:bg-primary/90 text-white"
+                onClick={handleCreateAchievement}
+                disabled={
+                  createLoading ||
+                  !newAchievement.name ||
+                  !newAchievement.description
+                }
+                className="bg-green-600! hover:bg-primary/90 text-white"
               >
                 {createLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                 ) : null}
-                {createLoading ? "Đang tạo..." : "Tạo bài viết"}
+                {createLoading ? "Đang tạo..." : "Tạo thành tựu"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Edit Blog Post Dialog */}
+        {/* Edit Achievement Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
+              <DialogTitle>Chỉnh sửa thành tựu</DialogTitle>
               <DialogDescription>
-                Cập nhật thông tin bài viết #{editPost.blogId}
+                Cập nhật thông tin thành tựu #{editAchievement.achievementId}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="editAuthorUsername">Tác giả</Label>
+                  <Label htmlFor="editName">Tên thành tựu</Label>
                   <Input
-                    id="editAuthorUsername"
-                    value={editPost.authorUsername}
-                    disabled
+                    id="editName"
+                    value={editAchievement.name}
+                    onChange={(e) =>
+                      setEditAchievement({
+                        ...editAchievement,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Nhập tên thành tựu"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
@@ -1038,9 +1144,12 @@ export default function BlogPostManagement() {
                   <Label htmlFor="editCategory">Danh mục</Label>
                   <Input
                     id="editCategory"
-                    value={editPost.category}
+                    value={editAchievement.category}
                     onChange={(e) =>
-                      setEditPost({ ...editPost, category: e.target.value })
+                      setEditAchievement({
+                        ...editAchievement,
+                        category: e.target.value,
+                      })
                     }
                     placeholder="Nhập danh mục"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -1048,83 +1157,121 @@ export default function BlogPostManagement() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editTitle">Tiêu đề</Label>
+                <Label htmlFor="editDescription">Mô tả</Label>
                 <Input
-                  id="editTitle"
-                  value={editPost.title}
+                  id="editDescription"
+                  value={editAchievement.description}
                   onChange={(e) =>
-                    setEditPost({ ...editPost, title: e.target.value })
+                    setEditAchievement({
+                      ...editAchievement,
+                      description: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tiêu đề bài viết"
+                  placeholder="Nhập mô tả thành tựu"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editSummary">Tóm tắt</Label>
+                <Label htmlFor="editCriteria">Tiêu chí đạt được</Label>
                 <Input
-                  id="editSummary"
-                  value={editPost.summary}
+                  id="editCriteria"
+                  value={editAchievement.criteria}
                   onChange={(e) =>
-                    setEditPost({ ...editPost, summary: e.target.value })
+                    setEditAchievement({
+                      ...editAchievement,
+                      criteria: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tóm tắt bài viết"
+                  placeholder="Nhập tiêu chí để đạt được thành tựu"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="editFeaturedImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="editFeaturedImage"
-                  value={editPost.featuredImage}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editPointsAwarded">Điểm thưởng</Label>
+                  <Input
+                    id="editPointsAwarded"
+                    type="number"
+                    value={editAchievement.pointsAwarded}
+                    onChange={(e) =>
+                      setEditAchievement({
+                        ...editAchievement,
+                        pointsAwarded: Number.parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="Nhập số điểm thưởng"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editThresholdValue">Ngưỡng đạt được</Label>
+                  <Input
+                    id="editThresholdValue"
+                    type="number"
+                    value={editAchievement.thresholdValue}
+                    onChange={(e) =>
+                      setEditAchievement({
+                        ...editAchievement,
+                        thresholdValue: Number.parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="Nhập ngưỡng cần đạt"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editTags">Tags</Label>
+                <Label htmlFor="editBadgeImage">Hình ảnh huy hiệu</Label>
                 <Input
-                  id="editTags"
-                  value={editPost.tags}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
+                  id="editBadgeImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setEditAchievement({
+                      ...editAchievement,
+                      badgeImage: file,
+                    });
+                  }}
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editContent">Nội dung</Label>
-                <textarea
-                  id="editContent"
-                  value={editPost.content}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, content: e.target.value })
-                  }
-                  placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
-                />
+                <div className="mt-2">
+                  {editAchievement.badgeImage ? (
+                    <img
+                      src={
+                        URL.createObjectURL(editAchievement.badgeImage) ||
+                        "/placeholder.svg"
+                      }
+                      alt="New Preview"
+                      className="w-16 h-16 object-cover rounded-lg border"
+                    />
+                  ) : editAchievement.badgeImageUrl ? (
+                    <img
+                      src={editAchievement.badgeImageUrl || "/placeholder.svg"}
+                      alt="Current Badge"
+                      className="w-16 h-16 object-cover rounded-lg border"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
+                      <Award className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="editIsPublished"
-                  checked={editPost.isPublished}
+                  id="editIsActive"
+                  checked={editAchievement.isActive}
                   onChange={(e) =>
-                    setEditPost({
-                      ...editPost,
-                      isPublished: e.target.checked,
-                      publishedAt: e.target.checked
-                        ? new Date().toISOString()
-                        : null,
+                    setEditAchievement({
+                      ...editAchievement,
+                      isActive: e.target.checked,
                     })
                   }
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <Label htmlFor="editIsPublished">Xuất bản ngay</Label>
+                <Label htmlFor="editIsActive">Kích hoạt thành tựu</Label>
               </div>
             </div>
             <div className="flex justify-end space-x-3 pt-4">
@@ -1136,14 +1283,18 @@ export default function BlogPostManagement() {
                 Hủy
               </Button>
               <Button
-                onClick={handleEditPost}
-                disabled={editLoading || !editPost.title || !editPost.content}
+                onClick={handleEditAchievement}
+                disabled={
+                  editLoading ||
+                  !editAchievement.name ||
+                  !editAchievement.description
+                }
                 className="bg-blue-600! hover:bg-blue-700! text-white"
               >
                 {editLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                 ) : null}
-                {editLoading ? "Đang cập nhật..." : "Cập nhật bài viết"}
+                {editLoading ? "Đang cập nhật..." : "Cập nhật thành tựu"}
               </Button>
             </div>
           </DialogContent>

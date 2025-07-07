@@ -38,102 +38,92 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Eye,
-  CheckCircle,
-  XCircle,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  FileText,
-  Globe,
-  Clock,
-  BarChart3,
+  MessageSquare,
+  Heart,
+  User,
+  Calendar,
   Edit,
   Trash2,
+  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
-import { blogPostService } from "@/services/admin/blog-post/service";
+import { motivationalMessageService } from "@/services/admin/motivational-message/service";
+import { getUserFromToken } from "@/utils/token/auth";
 
-interface BlogPost {
-  blogId: number;
-  authorUsername: string;
-  title: string;
+interface MotivationalMessage {
+  messageId: number;
   content: string;
-  featuredImage: string;
-  summary: string;
   category: string;
-  tags: string;
-  viewCount: number;
-  isPublished: boolean;
-  publishedAt: string | null;
+  author: string;
+  quitPhase: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 type SortField =
-  | "title"
-  | "authorUsername"
+  | "content"
   | "category"
-  | "viewCount"
-  | "isPublished"
+  | "author"
+  | "quitPhase"
+  | "isActive"
   | "createdAt";
 type SortOrder = "asc" | "desc";
 
-export default function BlogPostManagement() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+export default function MotivationalMessageManagement() {
+  const username = getUserFromToken()?.username;
+  const [messages, setMessages] = useState<MotivationalMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [quitPhaseFilter, setQuitPhaseFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<MotivationalMessage | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [newPost, setNewPost] = useState({
-    authorUsername: "",
-    title: "",
+  const [newMessage, setNewMessage] = useState({
     content: "",
-    featuredImage: "",
-    summary: "",
     category: "",
-    tags: "",
+    author:  username ?? "",
+    quitPhase: "",
   });
-
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
-  const [editPost, setEditPost] = useState({
-    blogId: 0,
-    authorUsername: "",
-    title: "",
+  const [editMessage, setEditMessage] = useState({
+    messageId: 0,
     content: "",
-    featuredImage: "",
-    summary: "",
     category: "",
-    tags: "",
-    isPublished: false as boolean,
-    publishedAt: null as string | null,
+    author: username ?? "",
+    quitPhase: "",
+    isActive: true,
   });
 
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchPosts();
+    fetchMessages();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await blogPostService.getAllBlogPost();
-      setPosts(response);
+      const response = await motivationalMessageService.getAllMessages();
+      setMessages(response.data);
     } catch (error: any) {
-      toast.error("Lỗi khi tải danh sách bài viết", {
+      toast.error("Lỗi khi tải danh sách tin nhắn động viên", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -160,27 +150,41 @@ export default function BlogPostManagement() {
   };
 
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(posts.map((post) => post.category))];
+    const uniqueCategories = [
+      ...new Set(messages.map((message) => message.category)),
+    ];
     return uniqueCategories.filter(Boolean);
-  }, [posts]);
+  }, [messages]);
 
-  const filteredAndSortedPosts = useMemo(() => {
-    const filtered = posts.filter((post) => {
+  const quitPhases = useMemo(() => {
+    const uniquePhases = [
+      ...new Set(messages.map((message) => message.quitPhase)),
+    ];
+    return uniquePhases.filter(Boolean);
+  }, [messages]);
+
+  const filteredAndSortedMessages = useMemo(() => {
+    const filtered = messages.filter((message) => {
       const matchesSearch =
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.authorUsername.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchTerm.toLowerCase());
+        message.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        message.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        message.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        message.quitPhase.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter === "published" && post.isPublished) ||
-        (statusFilter === "draft" && !post.isPublished);
+        (statusFilter === "active" && message.isActive) ||
+        (statusFilter === "inactive" && !message.isActive);
 
       const matchesCategory =
-        categoryFilter === "all" || post.category === categoryFilter;
+        categoryFilter === "all" || message.category === categoryFilter;
 
-      return matchesSearch && matchesStatus && matchesCategory;
+      const matchesQuitPhase =
+        quitPhaseFilter === "all" || message.quitPhase === quitPhaseFilter;
+
+      return (
+        matchesSearch && matchesStatus && matchesCategory && matchesQuitPhase
+      );
     });
 
     // Sort
@@ -202,22 +206,33 @@ export default function BlogPostManagement() {
     });
 
     return filtered;
-  }, [posts, searchTerm, statusFilter, categoryFilter, sortField, sortOrder]);
+  }, [
+    messages,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    quitPhaseFilter,
+    sortField,
+    sortOrder,
+  ]);
 
-  const paginatedPosts = useMemo(() => {
+  const paginatedMessages = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedPosts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredAndSortedPosts, currentPage]);
+    return filteredAndSortedMessages.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+  }, [filteredAndSortedMessages, currentPage]);
 
-  const totalPages = Math.ceil(filteredAndSortedPosts.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAndSortedMessages.length / itemsPerPage);
 
-  const handleViewDetail = async (blogId: number) => {
+  const handleViewDetail = async (messageId: number) => {
     try {
       setDetailLoading(true);
-      const response = await blogPostService.getById(blogId);
-      setSelectedPost(response);
+      const response = await motivationalMessageService.getById(messageId);
+      setSelectedMessage(response.data || response);
     } catch (error: any) {
-      toast.error("Lỗi khi tải chi tiết bài viết", {
+      toast.error("Lỗi khi tải chi tiết tin nhắn", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -225,25 +240,24 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleCreatePost = async () => {
+  const handleCreateMessage = async () => {
     try {
       setCreateLoading(true);
-      const response = await blogPostService.createBlogPost(newPost);
-      setPosts([response, ...posts]);
+      const response = await motivationalMessageService.createMessage(
+        newMessage
+      );
+      setMessages([response, ...messages]);
       setCreateDialogOpen(false);
-      setNewPost({
-        authorUsername: "",
-        title: "",
+      setNewMessage({
         content: "",
-        featuredImage: "",
-        summary: "",
         category: "",
-        tags: "",
+        author: username ?? "",
+        quitPhase: "",
       });
-      toast.success("Đã tạo bài viết thành công");
-      fetchPosts(); // Refresh the list
+      toast.success("Đã tạo tin nhắn động viên thành công");
+      window.location.reload();
     } catch (error: any) {
-      toast.error("Lỗi khi tạo bài viết", {
+      toast.error("Lỗi khi tạo tin nhắn động viên", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -251,34 +265,40 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleEditPost = async () => {
+  const handleEditMessage = async () => {
     try {
       setEditLoading(true);
-      await blogPostService.updateBlogPost(editPost.blogId, {
-        title: editPost.title,
-        content: editPost.content,
-        featuredImage: editPost.featuredImage,
-        summary: editPost.summary,
-        category: editPost.category,
-        tags: editPost.tags,
-        isPublished: editPost.isPublished,
-        publishedAt: editPost.publishedAt,
+      await motivationalMessageService.updateMessage({
+        messageId: editMessage.messageId,
+        content: editMessage.content,
+        category: editMessage.category,
+        author: username ?? "",
+        quitPhase: editMessage.quitPhase,
+        isActive: editMessage.isActive,
       });
 
       // Update local state
-      setPosts(
-        posts.map((post) =>
-          post.blogId === editPost.blogId
-            ? { ...post, ...editPost, updatedAt: new Date().toISOString() }
-            : post
+      setMessages(
+        messages.map((message) =>
+          message.messageId === editMessage.messageId
+            ? {
+                ...message,
+                content: editMessage.content,
+                category: editMessage.category,
+                author: editMessage.author,
+                quitPhase: editMessage.quitPhase,
+                isActive: editMessage.isActive,
+                updatedAt: new Date().toISOString(),
+              }
+            : message
         )
       );
 
       setEditDialogOpen(false);
-      toast.success("Đã cập nhật bài viết thành công");
-      fetchPosts(); // Refresh the list
+      toast.success("Đã cập nhật tin nhắn động viên thành công");
+      fetchMessages();
     } catch (error: any) {
-      toast.error("Lỗi khi cập nhật bài viết", {
+      toast.error("Lỗi khi cập nhật tin nhắn động viên", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -286,20 +306,20 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleDeletePost = async (blogId: number) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+  const handleDeleteMessage = async (messageId: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa tin nhắn động viên này?")) {
       return;
     }
 
     try {
-      setDeleteLoading(blogId);
-      await blogPostService.deleteBlogPost(blogId);
-
-      // Update local state
-      setPosts(posts.filter((post) => post.blogId !== blogId));
-      toast.success("Đã xóa bài viết thành công");
+      setDeleteLoading(messageId);
+      await motivationalMessageService.deleteMessage(messageId);
+      setMessages(
+        messages.filter((message) => message.messageId !== messageId)
+      );
+      toast.success("Đã xóa tin nhắn động viên thành công");
     } catch (error: any) {
-      toast.error("Lỗi khi xóa bài viết", {
+      toast.error("Lỗi khi xóa tin nhắn động viên", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
       });
     } finally {
@@ -307,18 +327,14 @@ export default function BlogPostManagement() {
     }
   };
 
-  const openEditDialog = (post: BlogPost) => {
-    setEditPost({
-      blogId: post.blogId,
-      authorUsername: post.authorUsername,
-      title: post.title,
-      content: post.content,
-      featuredImage: post.featuredImage,
-      summary: post.summary,
-      category: post.category,
-      tags: post.tags,
-      isPublished: post.isPublished,
-      publishedAt: post.publishedAt,
+  const openEditDialog = (message: MotivationalMessage) => {
+    setEditMessage({
+      messageId: message.messageId,
+      content: message.content,
+      category: message.category,
+      author: message.author,
+      quitPhase: message.quitPhase,
+      isActive: message.isActive,
     });
     setEditDialogOpen(true);
   };
@@ -334,12 +350,20 @@ export default function BlogPostManagement() {
   };
 
   const stats = useMemo(() => {
-    const total = posts.length;
-    const published = posts.filter((p) => p.isPublished).length;
-    const drafts = posts.filter((p) => !p.isPublished).length;
-    const totalViews = posts.reduce((sum, post) => sum + post.viewCount, 0);
-    return { total, published, drafts, totalViews };
-  }, [posts]);
+    const total = messages.length;
+    const active = messages.filter((m) => m.isActive).length;
+    const inactive = messages.filter((m) => !m.isActive).length;
+    const categoriesCount = new Set(messages.map((m) => m.category)).size;
+    const phasesCount = new Set(messages.map((m) => m.quitPhase)).size;
+
+    return {
+      total,
+      active,
+      inactive,
+      categoriesCount,
+      phasesCount,
+    };
+  }, [messages]);
 
   if (loading) {
     return (
@@ -350,28 +374,28 @@ export default function BlogPostManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
-              Quản lý Blog Posts
+              Quản lý Tin nhắn Động viên
             </h1>
             <p className="text-gray-600 mt-2">
-              Quản lý và xuất bản các bài viết blog về sức khỏe
+              Quản lý các tin nhắn động viên và hỗ trợ người dùng
             </p>
           </div>
           <div className="flex gap-3">
             <Button
               onClick={() => setCreateDialogOpen(true)}
-              className="bg-green-600! hover:bg-primary/90 text-white"
+              className="bg-orange-600! hover:bg-orange-700! text-white"
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Tạo bài viết mới
+              <Lightbulb className="w-4 h-4 mr-2" />
+              Tạo tin nhắn mới
             </Button>
             <Button
-              onClick={fetchPosts}
+              onClick={fetchMessages}
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10 bg-transparent"
             >
@@ -381,16 +405,16 @@ export default function BlogPostManagement() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-green">
-                  <FileText className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-orange-100">
+                  <MessageSquare className="h-8 w-8 text-orange-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Tổng bài viết
+                    Tổng tin nhắn
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.total}
@@ -399,50 +423,69 @@ export default function BlogPostManagement() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-blue">
-                  <Globe className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-green-100">
+                  <Heart className="h-8 w-8 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Đã xuất bản
+                    Đang hoạt động
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.published}
+                    {stats.active}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-yellow">
-                  <Clock className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-gray-100">
+                  <MessageSquare className="h-8 w-8 text-gray-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Bản nháp</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Không hoạt động
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.drafts}
+                    {stats.inactive}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-purple">
-                  <BarChart3 className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-blue-100">
+                  <Lightbulb className="h-8 w-8 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Tổng lượt xem
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Danh mục</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalViews.toLocaleString()}
+                    {stats.categoriesCount}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100">
+                  <Calendar className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Giai đoạn</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stats.phasesCount}
                   </p>
                 </div>
               </div>
@@ -451,9 +494,9 @@ export default function BlogPostManagement() {
         </div>
 
         {/* Filters */}
-        <Card className="border-0 shadow-health">
+        <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="search" className="text-gray-700 font-medium">
                   Tìm kiếm
@@ -462,28 +505,28 @@ export default function BlogPostManagement() {
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="search"
-                    placeholder="Tìm theo tiêu đề, tác giả, nội dung..."
+                    placeholder="Tìm theo nội dung, tác giả..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label className="text-gray-700 font-medium">
-                  Trạng thái xuất bản
-                </Label>
+                <Label className="text-gray-700 font-medium">Trạng thái</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất cả</SelectItem>
-                    <SelectItem value="published">Đã xuất bản</SelectItem>
-                    <SelectItem value="draft">Bản nháp</SelectItem>
+                    <SelectItem value="active">Đang hoạt động</SelectItem>
+                    <SelectItem value="inactive">Không hoạt động</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Danh mục</Label>
                 <Select
@@ -503,11 +546,34 @@ export default function BlogPostManagement() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-700 font-medium">
+                  Giai đoạn cai
+                </Label>
+                <Select
+                  value={quitPhaseFilter}
+                  onValueChange={setQuitPhaseFilter}
+                >
+                  <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    {quitPhases.map((phase) => (
+                      <SelectItem key={phase} value={phase}>
+                        {phase}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Kết quả</Label>
                 <div className="text-sm text-gray-600 pt-2">
-                  Hiển thị {paginatedPosts.length} /{" "}
-                  {filteredAndSortedPosts.length} bài viết
+                  Hiển thị {paginatedMessages.length} /{" "}
+                  {filteredAndSortedMessages.length} tin nhắn
                 </div>
               </div>
             </div>
@@ -515,7 +581,7 @@ export default function BlogPostManagement() {
         </Card>
 
         {/* Table */}
-        <Card className="border-0 shadow-health">
+        <Card className="border-0 shadow-lg">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
@@ -523,20 +589,11 @@ export default function BlogPostManagement() {
                   <TableRow>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("title")}
+                      onClick={() => handleSort("content")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Tiêu đề</span>
-                        {getSortIcon("title")}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("authorUsername")}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span>Tác giả</span>
-                        {getSortIcon("authorUsername")}
+                        <span>Nội dung</span>
+                        {getSortIcon("content")}
                       </div>
                     </TableHead>
                     <TableHead
@@ -550,82 +607,75 @@ export default function BlogPostManagement() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("viewCount")}
+                      onClick={() => handleSort("author")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Lượt xem</span>
-                        {getSortIcon("viewCount")}
+                        <span>Tác giả</span>
+                        {getSortIcon("author")}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("quitPhase")}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>Giai đoạn cai</span>
+                        {getSortIcon("quitPhase")}
                       </div>
                     </TableHead>
                     <TableHead>Trạng thái</TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span>Ngày tạo</span>
-                        {getSortIcon("createdAt")}
-                      </div>
-                    </TableHead>
+
                     <TableHead>Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedPosts.map((post) => (
-                    <TableRow key={post.blogId}>
+                  {paginatedMessages.map((message) => (
+                    <TableRow key={message.messageId}>
                       <TableCell className="font-medium">
-                        <div className="max-w-xs">
+                        <div className="max-w-md">
                           <div
-                            className="font-semibold truncate"
-                            title={post.title}
+                            className="text-sm text-gray-900 line-clamp-2"
+                            title={message.content}
                           >
-                            {post.title}
-                          </div>
-                          <div
-                            className="text-sm text-gray-500 truncate"
-                            title={post.summary}
-                          >
-                            {post.summary}
+                            {message.content}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{post.authorUsername}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className="border-primary/20 text-primary bg-primary/5"
+                          className="border-orange-200 text-orange-700 bg-orange-50"
                         >
-                          {post.category}
+                          {message.category}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <BarChart3 className="w-4 h-4 text-gray-400" />
-                          <span>{post.viewCount.toLocaleString()}</span>
+                        <div className="flex items-center space-x-2">
+                          <User className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm">{message.author}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={post.isPublished ? "default" : "secondary"}
-                          className={
-                            post.isPublished
-                              ? "bg-primary hover:bg-primary/90"
-                              : ""
-                          }
+                          variant="outline"
+                          className="border-purple-200 text-purple-700 bg-purple-50"
                         >
-                          {post.isPublished ? "Đã xuất bản" : "Bản nháp"}
+                          {message.quitPhase}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div>{formatDate(post.createdAt)}</div>
-                          {post.publishedAt && (
-                            <div className="text-gray-500">
-                              Xuất bản: {formatDate(post.publishedAt)}
-                            </div>
-                          )}
-                        </div>
+                        <Badge
+                          variant={message.isActive ? "default" : "secondary"}
+                          className={
+                            message.isActive
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-gray-400"
+                          }
+                        >
+                          {message.isActive ? "Hoạt động" : "Không hoạt động"}
+                        </Badge>
                       </TableCell>
+
                       <TableCell>
                         <div className="flex flex-col space-y-2">
                           {/* View Detail Button */}
@@ -634,7 +684,9 @@ export default function BlogPostManagement() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewDetail(post.blogId)}
+                                onClick={() =>
+                                  handleViewDetail(message.messageId)
+                                }
                                 className="w-full border-primary/20 text-primary hover:bg-primary/10"
                               >
                                 <Eye className="w-4 h-4 mr-1" />
@@ -643,9 +695,12 @@ export default function BlogPostManagement() {
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Chi tiết bài viết</DialogTitle>
+                                <DialogTitle>
+                                  Chi tiết tin nhắn động viên
+                                </DialogTitle>
                                 <DialogDescription>
-                                  Thông tin chi tiết của bài viết #{post.blogId}
+                                  Thông tin chi tiết của tin nhắn #
+                                  {message.messageId}
                                 </DialogDescription>
                               </DialogHeader>
                               {detailLoading ? (
@@ -653,7 +708,7 @@ export default function BlogPostManagement() {
                                   <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
                                 </div>
                               ) : (
-                                selectedPost && (
+                                selectedMessage && (
                                   <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
@@ -661,88 +716,56 @@ export default function BlogPostManagement() {
                                           ID
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.blogId}
+                                          {selectedMessage.messageId}
                                         </p>
                                       </div>
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Tác giả
-                                        </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.authorUsername}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Tiêu đề
-                                      </Label>
-                                      <p className="text-sm">
-                                        {selectedPost.title}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Tóm tắt
-                                      </Label>
-                                      <p className="text-sm">
-                                        {selectedPost.summary}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Nội dung
-                                      </Label>
-                                      <div className="text-sm max-h-40 overflow-y-auto bg-gray-50 p-3 rounded">
-                                        {selectedPost.content}
-                                      </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
                                           Danh mục
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.category}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Tags
-                                        </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.tags}
+                                          {selectedMessage.category}
                                         </p>
                                       </div>
                                     </div>
+
+                                    <div>
+                                      <Label className="font-semibold">
+                                        Nội dung tin nhắn
+                                      </Label>
+                                      <p className="text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded-lg mt-2">
+                                        {selectedMessage.content}
+                                      </p>
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
-                                          Lượt xem
+                                          Tác giả
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.viewCount.toLocaleString()}
+                                          {selectedMessage.author}
                                         </p>
                                       </div>
                                       <div>
                                         <Label className="font-semibold">
-                                          Ảnh đại diện
+                                          Giai đoạn cai thuốc
                                         </Label>
-                                        <p
-                                          className="text-sm truncate"
-                                          title={selectedPost.featuredImage}
-                                        >
-                                          {selectedPost.featuredImage}
+                                        <p className="text-sm">
+                                          {selectedMessage.quitPhase}
                                         </p>
                                       </div>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
                                           Ngày tạo
                                         </Label>
                                         <p className="text-sm">
-                                          {formatDate(selectedPost.createdAt)}
+                                          {formatDate(
+                                            selectedMessage.createdAt
+                                          )}
                                         </p>
                                       </div>
                                       <div>
@@ -750,31 +773,29 @@ export default function BlogPostManagement() {
                                           Cập nhật lần cuối
                                         </Label>
                                         <p className="text-sm">
-                                          {formatDate(selectedPost.updatedAt)}
+                                          {formatDate(
+                                            selectedMessage.updatedAt
+                                          )}
                                         </p>
                                       </div>
                                     </div>
-                                    {selectedPost.publishedAt && (
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Ngày xuất bản
-                                        </Label>
-                                        <p className="text-sm">
-                                          {formatDate(selectedPost.publishedAt)}
-                                        </p>
-                                      </div>
-                                    )}
+
                                     <div className="flex space-x-4 pt-4">
                                       <Badge
                                         variant={
-                                          selectedPost.isPublished
+                                          selectedMessage.isActive
                                             ? "default"
                                             : "secondary"
                                         }
+                                        className={
+                                          selectedMessage.isActive
+                                            ? "bg-green-500"
+                                            : ""
+                                        }
                                       >
-                                        {selectedPost.isPublished
-                                          ? "Đã xuất bản"
-                                          : "Bản nháp"}
+                                        {selectedMessage.isActive
+                                          ? "Đang hoạt động"
+                                          : "Không hoạt động"}
                                       </Badge>
                                     </div>
                                   </div>
@@ -787,7 +808,7 @@ export default function BlogPostManagement() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openEditDialog(post)}
+                            onClick={() => openEditDialog(message)}
                             className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
                           >
                             <Edit className="w-4 h-4 mr-1" />
@@ -798,16 +819,18 @@ export default function BlogPostManagement() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDeletePost(post.blogId)}
-                            disabled={deleteLoading === post.blogId}
+                            onClick={() =>
+                              handleDeleteMessage(message.messageId)
+                            }
+                            disabled={deleteLoading === message.messageId}
                             className="w-full bg-red-400!"
                           >
-                            {deleteLoading === post.blogId ? (
+                            {deleteLoading === message.messageId ? (
                               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-1" />
                             ) : (
                               <Trash2 className="w-4 h-4 mr-1" />
                             )}
-                            {deleteLoading === post.blogId
+                            {deleteLoading === message.messageId
                               ? "Đang xóa..."
                               : "Xóa"}
                           </Button>
@@ -818,9 +841,9 @@ export default function BlogPostManagement() {
                 </TableBody>
               </Table>
             </div>
-            {paginatedPosts.length === 0 && (
+            {paginatedMessages.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                Không tìm thấy bài viết nào phù hợp với bộ lọc
+                Không tìm thấy tin nhắn nào phù hợp với bộ lọc
               </div>
             )}
           </CardContent>
@@ -894,239 +917,212 @@ export default function BlogPostManagement() {
           </div>
         )}
 
-        {/* Create Blog Post Dialog */}
+        {/* Create Message Dialog */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Tạo bài viết mới</DialogTitle>
+              <DialogTitle>Tạo tin nhắn động viên mới</DialogTitle>
               <DialogDescription>
-                Điền thông tin để tạo bài viết blog mới
+                Điền thông tin để tạo tin nhắn động viên mới
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="content">Nội dung tin nhắn</Label>
+                <Textarea
+                  id="content"
+                  value={newMessage.content}
+                  onChange={(e) =>
+                    setNewMessage({
+                      ...newMessage,
+                      content: e.target.value,
+                    })
+                  }
+                  placeholder="Nhập nội dung tin nhắn động viên"
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="authorUsername">Tác giả</Label>
+                  <Label htmlFor="category">Danh mục</Label>
                   <Input
-                    id="authorUsername"
-                    value={newPost.authorUsername}
+                    id="category"
+                    value={newMessage.category}
                     onChange={(e) =>
-                      setNewPost({ ...newPost, authorUsername: e.target.value })
+                      setNewMessage({
+                        ...newMessage,
+                        category: e.target.value,
+                      })
+                    }
+                    placeholder="Nhập danh mục (VD: Motivation, Support)"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="author">Tác giả</Label>
+                  <Input
+                    id="author"
+                    disabled
+                    value={username}
+                    onChange={(e) =>
+                      setNewMessage({
+                        ...newMessage,
+                        author: e.target.value,
+                      })
                     }
                     placeholder="Nhập tên tác giả"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Danh mục</Label>
-                  <Input
-                    id="category"
-                    value={newPost.category}
-                    onChange={(e) =>
-                      setNewPost({ ...newPost, category: e.target.value })
-                    }
-                    placeholder="Nhập danh mục"
-                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="title">Tiêu đề</Label>
+                <Label htmlFor="quitPhase">Giai đoạn cai thuốc</Label>
                 <Input
-                  id="title"
-                  value={newPost.title}
+                  id="quitPhase"
+                  value={newMessage.quitPhase}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, title: e.target.value })
+                    setNewMessage({
+                      ...newMessage,
+                      quitPhase: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tiêu đề bài viết"
+                  placeholder="Nhập giai đoạn cai thuốc (VD: Preparation Phase, Action Phase)"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="summary">Tóm tắt</Label>
-                <Input
-                  id="summary"
-                  value={newPost.summary}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, summary: e.target.value })
-                  }
-                  placeholder="Nhập tóm tắt bài viết"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="featuredImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="featuredImage"
-                  value={newPost.featuredImage}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
-                <Input
-                  id="tags"
-                  value={newPost.tags}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="content">Nội dung</Label>
-                <textarea
-                  id="content"
-                  value={newPost.content}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, content: e.target.value })
-                  }
-                  placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
                 />
               </div>
             </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setCreateDialogOpen(false)}
+                onClick={() => {
+                  setCreateDialogOpen(false);
+                  setNewMessage({
+                    content: "",
+                    category: "",
+                    author: "",
+                    quitPhase: "",
+                  });
+                }}
                 disabled={createLoading}
               >
                 Hủy
               </Button>
               <Button
-                onClick={handleCreatePost}
-                disabled={createLoading || !newPost.title || !newPost.content}
-                className="bg-primary hover:bg-primary/90 text-white"
+                onClick={handleCreateMessage}
+                disabled={
+                  createLoading ||
+                  !newMessage.content ||
+                  !newMessage.category ||
+                  !newMessage.author ||
+                  !newMessage.quitPhase
+                }
+                className="bg-orange-600! hover:bg-orange-700! text-white"
               >
                 {createLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                 ) : null}
-                {createLoading ? "Đang tạo..." : "Tạo bài viết"}
+                {createLoading ? "Đang tạo..." : "Tạo tin nhắn"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Edit Blog Post Dialog */}
+        {/* Edit Message Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
+              <DialogTitle>Chỉnh sửa tin nhắn động viên</DialogTitle>
               <DialogDescription>
-                Cập nhật thông tin bài viết #{editPost.blogId}
+                Cập nhật thông tin tin nhắn #{editMessage.messageId}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editContent">Nội dung tin nhắn</Label>
+                <Textarea
+                  id="editContent"
+                  value={editMessage.content}
+                  onChange={(e) =>
+                    setEditMessage({
+                      ...editMessage,
+                      content: e.target.value,
+                    })
+                  }
+                  placeholder="Nhập nội dung tin nhắn động viên"
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editAuthorUsername">Tác giả</Label>
-                  <Input
-                    id="editAuthorUsername"
-                    value={editPost.authorUsername}
-                    disabled
-                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="editCategory">Danh mục</Label>
                   <Input
                     id="editCategory"
-                    value={editPost.category}
+                    value={editMessage.category}
                     onChange={(e) =>
-                      setEditPost({ ...editPost, category: e.target.value })
+                      setEditMessage({
+                        ...editMessage,
+                        category: e.target.value,
+                      })
                     }
                     placeholder="Nhập danh mục"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editAuthor">Tác giả</Label>
+                  <Input
+                  disabled
+                    id="editAuthor"
+                    value={username}
+                    onChange={(e) =>
+                      setEditMessage({
+                        ...editMessage,
+                        author: e.target.value,
+                      })
+                    }
+                    placeholder="Nhập tên tác giả"
+                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="editTitle">Tiêu đề</Label>
+                <Label htmlFor="editQuitPhase">Giai đoạn cai thuốc</Label>
                 <Input
-                  id="editTitle"
-                  value={editPost.title}
+                  id="editQuitPhase"
+                  value={editMessage.quitPhase}
                   onChange={(e) =>
-                    setEditPost({ ...editPost, title: e.target.value })
+                    setEditMessage({
+                      ...editMessage,
+                      quitPhase: e.target.value,
+                    })
                   }
-                  placeholder="Nhập tiêu đề bài viết"
+                  placeholder="Nhập giai đoạn cai thuốc"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="editSummary">Tóm tắt</Label>
-                <Input
-                  id="editSummary"
-                  value={editPost.summary}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, summary: e.target.value })
-                  }
-                  placeholder="Nhập tóm tắt bài viết"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editFeaturedImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="editFeaturedImage"
-                  value={editPost.featuredImage}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editTags">Tags</Label>
-                <Input
-                  id="editTags"
-                  value={editPost.tags}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editContent">Nội dung</Label>
-                <textarea
-                  id="editContent"
-                  value={editPost.content}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, content: e.target.value })
-                  }
-                  placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
-                />
-              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="editIsPublished"
-                  checked={editPost.isPublished}
+                  id="editIsActive"
+                  checked={editMessage.isActive}
                   onChange={(e) =>
-                    setEditPost({
-                      ...editPost,
-                      isPublished: e.target.checked,
-                      publishedAt: e.target.checked
-                        ? new Date().toISOString()
-                        : null,
+                    setEditMessage({
+                      ...editMessage,
+                      isActive: e.target.checked,
                     })
                   }
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <Label htmlFor="editIsPublished">Xuất bản ngay</Label>
+                <Label htmlFor="editIsActive">Kích hoạt tin nhắn</Label>
               </div>
             </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 variant="outline"
@@ -1136,14 +1132,20 @@ export default function BlogPostManagement() {
                 Hủy
               </Button>
               <Button
-                onClick={handleEditPost}
-                disabled={editLoading || !editPost.title || !editPost.content}
-                className="bg-blue-600! hover:bg-blue-700! text-white"
+                onClick={handleEditMessage}
+                disabled={
+                  editLoading ||
+                  !editMessage.content ||
+                  !editMessage.category ||
+                  !editMessage.author ||
+                  !editMessage.quitPhase
+                }
+                className="bg-orange-600! hover:bg-orange-700! text-white"
               >
                 {editLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                 ) : null}
-                {editLoading ? "Đang cập nhật..." : "Cập nhật bài viết"}
+                {editLoading ? "Đang cập nhật..." : "Cập nhật tin nhắn"}
               </Button>
             </div>
           </DialogContent>

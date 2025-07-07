@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,87 +35,92 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Eye,
-  CheckCircle,
-  XCircle,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   FileText,
-  Globe,
-  Clock,
-  BarChart3,
+  Heart,
+  MessageCircle,
+  Pin,
   Edit,
   Trash2,
+  ImageIcon,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
-import { blogPostService } from "@/services/admin/blog-post/service";
+import { postService } from "@/services/admin/post/service";
+import { getUserFromToken } from "@/utils/token/auth";
 
-interface BlogPost {
-  blogId: number;
-  authorUsername: string;
+interface Post {
+  postId: number;
+  communityId: number;
+  communityName: string;
+  username: string;
+  userFullName: string;
   title: string;
   content: string;
-  featuredImage: string;
-  summary: string;
-  category: string;
-  tags: string;
-  viewCount: number;
-  isPublished: boolean;
-  publishedAt: string | null;
+  mediaUrl: string;
+  postType: string;
+  likesCount: number;
+  commentsCount: number;
+  isPinned: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 type SortField =
   | "title"
-  | "authorUsername"
-  | "category"
-  | "viewCount"
-  | "isPublished"
+  | "communityName"
+  | "username"
+  | "postType"
+  | "likesCount"
+  | "commentsCount"
+  | "isPinned"
+  | "isActive"
   | "createdAt";
 type SortOrder = "asc" | "desc";
 
-export default function BlogPostManagement() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+export default function PostManagement() {
+  const username = getUserFromToken()?.username;
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [communityFilter, setCommunityFilter] = useState<string>("all");
+  const [postTypeFilter, setPostTypeFilter] = useState<string>("all");
+  const [pinnedFilter, setPinnedFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [newPost, setNewPost] = useState({
-    authorUsername: "",
+    communityId: 0,
+    username: username ?? "",
     title: "",
     content: "",
-    featuredImage: "",
-    summary: "",
-    category: "",
-    tags: "",
+    mediaFile: null as File | null,
+    postType: "text",
   });
-
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
   const [editPost, setEditPost] = useState({
-    blogId: 0,
-    authorUsername: "",
+    postId: 0,
     title: "",
     content: "",
-    featuredImage: "",
-    summary: "",
-    category: "",
-    tags: "",
-    isPublished: false as boolean,
-    publishedAt: null as string | null,
+    mediaFile: null as File | null,
+    mediaUrl: "",
+    postType: "text",
+    isPinned: false,
+    isActive: true,
   });
 
   const itemsPerPage = 10;
@@ -130,8 +132,8 @@ export default function BlogPostManagement() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await blogPostService.getAllBlogPost();
-      setPosts(response);
+      const response = await postService.getAllPosts();
+      setPosts(response.data);
     } catch (error: any) {
       toast.error("Lỗi khi tải danh sách bài viết", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
@@ -159,28 +161,50 @@ export default function BlogPostManagement() {
     );
   };
 
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(posts.map((post) => post.category))];
-    return uniqueCategories.filter(Boolean);
+  const communities = useMemo(() => {
+    const uniqueCommunities = [
+      ...new Set(posts.map((post) => post.communityName)),
+    ];
+    return uniqueCommunities.filter(Boolean);
+  }, [posts]);
+
+  const postTypes = useMemo(() => {
+    const uniqueTypes = [...new Set(posts.map((post) => post.postType))];
+    return uniqueTypes.filter(Boolean);
   }, [posts]);
 
   const filteredAndSortedPosts = useMemo(() => {
     const filtered = posts.filter((post) => {
       const matchesSearch =
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.authorUsername.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchTerm.toLowerCase());
+        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.communityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.userFullName.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter === "published" && post.isPublished) ||
-        (statusFilter === "draft" && !post.isPublished);
+        (statusFilter === "active" && post.isActive) ||
+        (statusFilter === "inactive" && !post.isActive);
 
-      const matchesCategory =
-        categoryFilter === "all" || post.category === categoryFilter;
+      const matchesCommunity =
+        communityFilter === "all" || post.communityName === communityFilter;
 
-      return matchesSearch && matchesStatus && matchesCategory;
+      const matchesPostType =
+        postTypeFilter === "all" || post.postType === postTypeFilter;
+
+      const matchesPinned =
+        pinnedFilter === "all" ||
+        (pinnedFilter === "pinned" && post.isPinned) ||
+        (pinnedFilter === "unpinned" && !post.isPinned);
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesCommunity &&
+        matchesPostType &&
+        matchesPinned
+      );
     });
 
     // Sort
@@ -202,7 +226,16 @@ export default function BlogPostManagement() {
     });
 
     return filtered;
-  }, [posts, searchTerm, statusFilter, categoryFilter, sortField, sortOrder]);
+  }, [
+    posts,
+    searchTerm,
+    statusFilter,
+    communityFilter,
+    postTypeFilter,
+    pinnedFilter,
+    sortField,
+    sortOrder,
+  ]);
 
   const paginatedPosts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -211,11 +244,11 @@ export default function BlogPostManagement() {
 
   const totalPages = Math.ceil(filteredAndSortedPosts.length / itemsPerPage);
 
-  const handleViewDetail = async (blogId: number) => {
+  const handleViewDetail = async (postId: number) => {
     try {
       setDetailLoading(true);
-      const response = await blogPostService.getById(blogId);
-      setSelectedPost(response);
+      const response = await postService.getById(postId);
+      setSelectedPost(response.data || response);
     } catch (error: any) {
       toast.error("Lỗi khi tải chi tiết bài viết", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
@@ -228,20 +261,19 @@ export default function BlogPostManagement() {
   const handleCreatePost = async () => {
     try {
       setCreateLoading(true);
-      const response = await blogPostService.createBlogPost(newPost);
+      const response = await postService.createPost(newPost);
       setPosts([response, ...posts]);
       setCreateDialogOpen(false);
       setNewPost({
-        authorUsername: "",
+        communityId: 0,
+        username: username ?? "",
         title: "",
         content: "",
-        featuredImage: "",
-        summary: "",
-        category: "",
-        tags: "",
+        mediaFile: null,
+        postType: "text",
       });
       toast.success("Đã tạo bài viết thành công");
-      fetchPosts(); // Refresh the list
+      window.location.reload();
     } catch (error: any) {
       toast.error("Lỗi khi tạo bài viết", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
@@ -254,29 +286,37 @@ export default function BlogPostManagement() {
   const handleEditPost = async () => {
     try {
       setEditLoading(true);
-      await blogPostService.updateBlogPost(editPost.blogId, {
+      await postService.updatePost({
+        postId: editPost.postId,
         title: editPost.title,
         content: editPost.content,
-        featuredImage: editPost.featuredImage,
-        summary: editPost.summary,
-        category: editPost.category,
-        tags: editPost.tags,
-        isPublished: editPost.isPublished,
-        publishedAt: editPost.publishedAt,
+        mediaFile: editPost.mediaFile,
+        postType: editPost.postType,
+        isPinned: editPost.isPinned,
+        isActive: editPost.isActive,
       });
 
       // Update local state
       setPosts(
         posts.map((post) =>
-          post.blogId === editPost.blogId
-            ? { ...post, ...editPost, updatedAt: new Date().toISOString() }
+          post.postId === editPost.postId
+            ? {
+                ...post,
+                title: editPost.title,
+                content: editPost.content,
+                mediaUrl: editPost.mediaUrl,
+                postType: editPost.postType,
+                isPinned: editPost.isPinned,
+                isActive: editPost.isActive,
+                updatedAt: new Date().toISOString(),
+              }
             : post
         )
       );
 
       setEditDialogOpen(false);
       toast.success("Đã cập nhật bài viết thành công");
-      fetchPosts(); // Refresh the list
+      fetchPosts();
     } catch (error: any) {
       toast.error("Lỗi khi cập nhật bài viết", {
         description: error.response?.data?.message || "Có lỗi xảy ra",
@@ -286,17 +326,15 @@ export default function BlogPostManagement() {
     }
   };
 
-  const handleDeletePost = async (blogId: number) => {
+  const handleDeletePost = async (postId: number) => {
     if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
       return;
     }
 
     try {
-      setDeleteLoading(blogId);
-      await blogPostService.deleteBlogPost(blogId);
-
-      // Update local state
-      setPosts(posts.filter((post) => post.blogId !== blogId));
+      setDeleteLoading(postId);
+      await postService.deletePost(postId);
+      setPosts(posts.filter((post) => post.postId !== postId));
       toast.success("Đã xóa bài viết thành công");
     } catch (error: any) {
       toast.error("Lỗi khi xóa bài viết", {
@@ -307,18 +345,16 @@ export default function BlogPostManagement() {
     }
   };
 
-  const openEditDialog = (post: BlogPost) => {
+  const openEditDialog = (post: Post) => {
     setEditPost({
-      blogId: post.blogId,
-      authorUsername: post.authorUsername,
+      postId: post.postId,
       title: post.title,
       content: post.content,
-      featuredImage: post.featuredImage,
-      summary: post.summary,
-      category: post.category,
-      tags: post.tags,
-      isPublished: post.isPublished,
-      publishedAt: post.publishedAt,
+      mediaFile: null,
+      mediaUrl: post.mediaUrl,
+      postType: post.postType,
+      isPinned: post.isPinned,
+      isActive: post.isActive,
     });
     setEditDialogOpen(true);
   };
@@ -333,12 +369,36 @@ export default function BlogPostManagement() {
     });
   };
 
+  const getPostTypeIcon = (postType: string) => {
+    switch (postType.toLowerCase()) {
+      case "image":
+        return <ImageIcon className="w-4 h-4" />;
+      case "video":
+        return <Video className="w-4 h-4" />;
+      default:
+        return <FileText className="w-4 h-4" />;
+    }
+  };
+
   const stats = useMemo(() => {
     const total = posts.length;
-    const published = posts.filter((p) => p.isPublished).length;
-    const drafts = posts.filter((p) => !p.isPublished).length;
-    const totalViews = posts.reduce((sum, post) => sum + post.viewCount, 0);
-    return { total, published, drafts, totalViews };
+    const active = posts.filter((p) => p.isActive).length;
+    const inactive = posts.filter((p) => !p.isActive).length;
+    const pinned = posts.filter((p) => p.isPinned).length;
+    const totalLikes = posts.reduce((sum, post) => sum + post.likesCount, 0);
+    const totalComments = posts.reduce(
+      (sum, post) => sum + post.commentsCount,
+      0
+    );
+
+    return {
+      total,
+      active,
+      inactive,
+      pinned,
+      totalLikes,
+      totalComments,
+    };
   }, [posts]);
 
   if (loading) {
@@ -350,22 +410,22 @@ export default function BlogPostManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
-              Quản lý Blog Posts
+              Quản lý Bài viết
             </h1>
             <p className="text-gray-600 mt-2">
-              Quản lý và xuất bản các bài viết blog về sức khỏe
+              Quản lý các bài viết và nội dung trong hệ thống
             </p>
           </div>
           <div className="flex gap-3">
             <Button
               onClick={() => setCreateDialogOpen(true)}
-              className="bg-green-600! hover:bg-primary/90 text-white"
+              className="bg-purple-600! hover:bg-purple-700! text-white"
             >
               <FileText className="w-4 h-4 mr-2" />
               Tạo bài viết mới
@@ -381,12 +441,12 @@ export default function BlogPostManagement() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-green">
-                  <FileText className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-purple-100">
+                  <FileText className="h-8 w-8 text-purple-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
@@ -399,50 +459,37 @@ export default function BlogPostManagement() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-blue">
-                  <Globe className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-red-100">
+                  <Heart className="h-8 w-8 text-red-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Đã xuất bản
+                    Tổng lượt thích
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.published}
+                    {stats.totalLikes.toLocaleString()}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="feature-icon-yellow">
-                  <Clock className="h-8 w-8" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Bản nháp</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.drafts}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-health hover:shadow-health-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="feature-icon-purple">
-                  <BarChart3 className="h-8 w-8" />
+                <div className="p-3 rounded-full bg-blue-100">
+                  <MessageCircle className="h-8 w-8 text-blue-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Tổng lượt xem
+                    Tổng bình luận
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalViews.toLocaleString()}
+                    {stats.totalComments.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -451,9 +498,9 @@ export default function BlogPostManagement() {
         </div>
 
         {/* Filters */}
-        <Card className="border-0 shadow-health">
+        <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="search" className="text-gray-700 font-medium">
                   Tìm kiếm
@@ -462,47 +509,84 @@ export default function BlogPostManagement() {
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="search"
-                    placeholder="Tìm theo tiêu đề, tác giả, nội dung..."
+                    placeholder="Tìm theo tiêu đề, nội dung..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label className="text-gray-700 font-medium">
-                  Trạng thái xuất bản
-                </Label>
+                <Label className="text-gray-700 font-medium">Trạng thái</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất cả</SelectItem>
-                    <SelectItem value="published">Đã xuất bản</SelectItem>
-                    <SelectItem value="draft">Bản nháp</SelectItem>
+                    <SelectItem value="active">Đang hoạt động</SelectItem>
+                    <SelectItem value="inactive">Không hoạt động</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-2">
-                <Label className="text-gray-700 font-medium">Danh mục</Label>
+                <Label className="text-gray-700 font-medium">Cộng đồng</Label>
                 <Select
-                  value={categoryFilter}
-                  onValueChange={setCategoryFilter}
+                  value={communityFilter}
+                  onValueChange={setCommunityFilter}
                 >
                   <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất cả</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
+                    {communities.map((community) => (
+                      <SelectItem key={community} value={community}>
+                        {community}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-700 font-medium">
+                  Loại bài viết
+                </Label>
+                <Select
+                  value={postTypeFilter}
+                  onValueChange={setPostTypeFilter}
+                >
+                  <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    {postTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-700 font-medium">Ghim</Label>
+                <Select value={pinnedFilter} onValueChange={setPinnedFilter}>
+                  <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    <SelectItem value="pinned">Đã ghim</SelectItem>
+                    <SelectItem value="unpinned">Chưa ghim</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-gray-700 font-medium">Kết quả</Label>
                 <div className="text-sm text-gray-600 pt-2">
@@ -515,7 +599,7 @@ export default function BlogPostManagement() {
         </Card>
 
         {/* Table */}
-        <Card className="border-0 shadow-health">
+        <Card className="border-0 shadow-lg">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
@@ -532,100 +616,135 @@ export default function BlogPostManagement() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("authorUsername")}
+                      onClick={() => handleSort("communityName")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Tác giả</span>
-                        {getSortIcon("authorUsername")}
+                        <span>Cộng đồng</span>
+                        {getSortIcon("communityName")}
+                      </div>
+                    </TableHead>
+
+                    <TableHead
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleSort("postType")}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>Loại</span>
+                        {getSortIcon("postType")}
                       </div>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("category")}
+                      onClick={() => handleSort("likesCount")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Danh mục</span>
-                        {getSortIcon("category")}
+                        <span>Lượt thích</span>
+                        {getSortIcon("likesCount")}
                       </div>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("viewCount")}
+                      onClick={() => handleSort("commentsCount")}
                     >
                       <div className="flex items-center space-x-2">
-                        <span>Lượt xem</span>
-                        {getSortIcon("viewCount")}
+                        <span>Bình luận</span>
+                        {getSortIcon("commentsCount")}
                       </div>
                     </TableHead>
                     <TableHead>Trạng thái</TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span>Ngày tạo</span>
-                        {getSortIcon("createdAt")}
-                      </div>
-                    </TableHead>
+
                     <TableHead>Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedPosts.map((post) => (
-                    <TableRow key={post.blogId}>
+                    <TableRow key={post.postId}>
                       <TableCell className="font-medium">
-                        <div className="max-w-xs">
-                          <div
-                            className="font-semibold truncate"
-                            title={post.title}
-                          >
-                            {post.title}
-                          </div>
-                          <div
-                            className="text-sm text-gray-500 truncate"
-                            title={post.summary}
-                          >
-                            {post.summary}
+                        <div className="flex items-center space-x-3">
+                          {post.mediaUrl && (
+                            <img
+                              src={
+                                post.mediaUrl ||
+                                "/placeholder.svg?height=40&width=40"
+                              }
+                              alt={post.title}
+                              className="w-10 h-10 rounded object-cover"
+                            />
+                          )}
+                          <div className="max-w-xs">
+                            <div
+                              className="font-semibold truncate flex items-center"
+                              title={post.title}
+                            >
+                              {post.isPinned && (
+                                <Pin className="w-4 h-4 text-yellow-500 mr-1" />
+                              )}
+                              {post.title}
+                            </div>
+                            <div
+                              className="text-sm text-gray-500 truncate"
+                              title={post.content}
+                            >
+                              {post.content}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{post.authorUsername}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className="border-primary/20 text-primary bg-primary/5"
                         >
-                          {post.category}
+                          {post.communityName}
                         </Badge>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          {getPostTypeIcon(post.postType)}
+                          <span className="capitalize">{post.postType}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
-                          <BarChart3 className="w-4 h-4 text-gray-400" />
-                          <span>{post.viewCount.toLocaleString()}</span>
+                          <Heart className="w-4 h-4 text-red-500" />
+                          <span className="font-semibold">
+                            {post.likesCount.toLocaleString()}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={post.isPublished ? "default" : "secondary"}
-                          className={
-                            post.isPublished
-                              ? "bg-primary hover:bg-primary/90"
-                              : ""
-                          }
-                        >
-                          {post.isPublished ? "Đã xuất bản" : "Bản nháp"}
-                        </Badge>
+                        <div className="flex items-center space-x-1">
+                          <MessageCircle className="w-4 h-4 text-blue-500" />
+                          <span className="font-semibold">
+                            {post.commentsCount.toLocaleString()}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div>{formatDate(post.createdAt)}</div>
-                          {post.publishedAt && (
-                            <div className="text-gray-500">
-                              Xuất bản: {formatDate(post.publishedAt)}
-                            </div>
+                        <div className="flex flex-col space-y-1">
+                          <Badge
+                            variant={post.isActive ? "default" : "secondary"}
+                            className={
+                              post.isActive
+                                ? "bg-green-500 hover:bg-green-600"
+                                : "bg-gray-400"
+                            }
+                          >
+                            {post.isActive ? "Hoạt động" : "Không hoạt động"}
+                          </Badge>
+                          {post.isPinned && (
+                            <Badge
+                              variant="outline"
+                              className="border-yellow-200 text-yellow-700 bg-yellow-50"
+                            >
+                              <Pin className="w-3 h-3 mr-1" />
+                              Đã ghim
+                            </Badge>
                           )}
                         </div>
                       </TableCell>
+
                       <TableCell>
                         <div className="flex flex-col space-y-2">
                           {/* View Detail Button */}
@@ -634,7 +753,7 @@ export default function BlogPostManagement() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewDetail(post.blogId)}
+                                onClick={() => handleViewDetail(post.postId)}
                                 className="w-full border-primary/20 text-primary hover:bg-primary/10"
                               >
                                 <Eye className="w-4 h-4 mr-1" />
@@ -645,7 +764,7 @@ export default function BlogPostManagement() {
                               <DialogHeader>
                                 <DialogTitle>Chi tiết bài viết</DialogTitle>
                                 <DialogDescription>
-                                  Thông tin chi tiết của bài viết #{post.blogId}
+                                  Thông tin chi tiết của bài viết #{post.postId}
                                 </DialogDescription>
                               </DialogHeader>
                               {detailLoading ? (
@@ -661,18 +780,19 @@ export default function BlogPostManagement() {
                                           ID
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.blogId}
+                                          {selectedPost.postId}
                                         </p>
                                       </div>
                                       <div>
                                         <Label className="font-semibold">
-                                          Tác giả
+                                          Cộng đồng
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.authorUsername}
+                                          {selectedPost.communityName}
                                         </p>
                                       </div>
                                     </div>
+
                                     <div>
                                       <Label className="font-semibold">
                                         Tiêu đề
@@ -681,61 +801,75 @@ export default function BlogPostManagement() {
                                         {selectedPost.title}
                                       </p>
                                     </div>
-                                    <div>
-                                      <Label className="font-semibold">
-                                        Tóm tắt
-                                      </Label>
-                                      <p className="text-sm">
-                                        {selectedPost.summary}
-                                      </p>
-                                    </div>
+
                                     <div>
                                       <Label className="font-semibold">
                                         Nội dung
                                       </Label>
-                                      <div className="text-sm max-h-40 overflow-y-auto bg-gray-50 p-3 rounded">
+                                      <p className="text-sm whitespace-pre-wrap">
                                         {selectedPost.content}
-                                      </div>
+                                      </p>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
-                                          Danh mục
+                                          Tác giả
                                         </Label>
                                         <p className="text-sm">
-                                          {selectedPost.category}
+                                          {selectedPost.userFullName} (@
+                                          {selectedPost.username})
                                         </p>
                                       </div>
                                       <div>
                                         <Label className="font-semibold">
-                                          Tags
+                                          Loại bài viết
                                         </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.tags}
+                                        <p className="text-sm capitalize">
+                                          {selectedPost.postType}
                                         </p>
                                       </div>
                                     </div>
+
+                                    {selectedPost.mediaUrl && (
+                                      <div>
+                                        <Label className="font-semibold">
+                                          Media
+                                        </Label>
+                                        <div className="mt-2">
+                                          <img
+                                            src={
+                                              selectedPost.mediaUrl ||
+                                              "/placeholder.svg"
+                                            }
+                                            alt="Post media"
+                                            className="max-w-full h-auto rounded-lg border"
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
-                                          Lượt xem
+                                          Lượt thích
                                         </Label>
-                                        <p className="text-sm">
-                                          {selectedPost.viewCount.toLocaleString()}
+                                        <p className="text-sm font-semibold text-red-600">
+                                          {selectedPost.likesCount.toLocaleString()}{" "}
+                                          lượt thích
                                         </p>
                                       </div>
                                       <div>
                                         <Label className="font-semibold">
-                                          Ảnh đại diện
+                                          Bình luận
                                         </Label>
-                                        <p
-                                          className="text-sm truncate"
-                                          title={selectedPost.featuredImage}
-                                        >
-                                          {selectedPost.featuredImage}
+                                        <p className="text-sm font-semibold text-blue-600">
+                                          {selectedPost.commentsCount.toLocaleString()}{" "}
+                                          bình luận
                                         </p>
                                       </div>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <Label className="font-semibold">
@@ -754,28 +888,33 @@ export default function BlogPostManagement() {
                                         </p>
                                       </div>
                                     </div>
-                                    {selectedPost.publishedAt && (
-                                      <div>
-                                        <Label className="font-semibold">
-                                          Ngày xuất bản
-                                        </Label>
-                                        <p className="text-sm">
-                                          {formatDate(selectedPost.publishedAt)}
-                                        </p>
-                                      </div>
-                                    )}
+
                                     <div className="flex space-x-4 pt-4">
                                       <Badge
                                         variant={
-                                          selectedPost.isPublished
+                                          selectedPost.isActive
                                             ? "default"
                                             : "secondary"
                                         }
+                                        className={
+                                          selectedPost.isActive
+                                            ? "bg-green-500"
+                                            : ""
+                                        }
                                       >
-                                        {selectedPost.isPublished
-                                          ? "Đã xuất bản"
-                                          : "Bản nháp"}
+                                        {selectedPost.isActive
+                                          ? "Đang hoạt động"
+                                          : "Không hoạt động"}
                                       </Badge>
+                                      {selectedPost.isPinned && (
+                                        <Badge
+                                          variant="outline"
+                                          className="border-yellow-200 text-yellow-700 bg-yellow-50"
+                                        >
+                                          <Pin className="w-3 h-3 mr-1" />
+                                          Đã ghim
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 )
@@ -798,16 +937,16 @@ export default function BlogPostManagement() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDeletePost(post.blogId)}
-                            disabled={deleteLoading === post.blogId}
+                            onClick={() => handleDeletePost(post.postId)}
+                            disabled={deleteLoading === post.postId}
                             className="w-full bg-red-400!"
                           >
-                            {deleteLoading === post.blogId ? (
+                            {deleteLoading === post.postId ? (
                               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-1" />
                             ) : (
                               <Trash2 className="w-4 h-4 mr-1" />
                             )}
-                            {deleteLoading === post.blogId
+                            {deleteLoading === post.postId
                               ? "Đang xóa..."
                               : "Xóa"}
                           </Button>
@@ -894,116 +1033,165 @@ export default function BlogPostManagement() {
           </div>
         )}
 
-        {/* Create Blog Post Dialog */}
+        {/* Create Post Dialog */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tạo bài viết mới</DialogTitle>
               <DialogDescription>
-                Điền thông tin để tạo bài viết blog mới
+                Điền thông tin để tạo bài viết mới
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="authorUsername">Tác giả</Label>
+                  <Label htmlFor="communityId">ID Cộng đồng</Label>
                   <Input
-                    id="authorUsername"
-                    value={newPost.authorUsername}
+                    id="communityId"
+                    type="number"
+                    value={newPost.communityId}
                     onChange={(e) =>
-                      setNewPost({ ...newPost, authorUsername: e.target.value })
+                      setNewPost({
+                        ...newPost,
+                        communityId: Number.parseInt(e.target.value) || 0,
+                      })
                     }
-                    placeholder="Nhập tên tác giả"
+                    placeholder="Nhập ID cộng đồng"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Danh mục</Label>
+                  <Label htmlFor="username">Tên người dùng</Label>
                   <Input
-                    id="category"
-                    value={newPost.category}
+                    disabled
+                    value={username}
                     onChange={(e) =>
-                      setNewPost({ ...newPost, category: e.target.value })
+                      setNewPost({
+                        ...newPost,
+                        username: e.target.value,
+                      })
                     }
-                    placeholder="Nhập danh mục"
+                    placeholder="Nhập tên người dùng"
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Tiêu đề</Label>
                 <Input
                   id="title"
                   value={newPost.title}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, title: e.target.value })
+                    setNewPost({
+                      ...newPost,
+                      title: e.target.value,
+                    })
                   }
                   placeholder="Nhập tiêu đề bài viết"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="summary">Tóm tắt</Label>
-                <Input
-                  id="summary"
-                  value={newPost.summary}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, summary: e.target.value })
-                  }
-                  placeholder="Nhập tóm tắt bài viết"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="featuredImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="featuredImage"
-                  value={newPost.featuredImage}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
-                <Input
-                  id="tags"
-                  value={newPost.tags}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="content">Nội dung</Label>
-                <textarea
+                <Textarea
                   id="content"
                   value={newPost.content}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, content: e.target.value })
+                    setNewPost({
+                      ...newPost,
+                      content: e.target.value,
+                    })
                   }
                   placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="postType">Loại bài viết</Label>
+                <Select
+                  value={newPost.postType}
+                  onValueChange={(value) =>
+                    setNewPost({ ...newPost, postType: value })
+                  }
+                >
+                  <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mediaFile">File media</Label>
+                <Input
+                  id="mediaFile"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setNewPost({
+                      ...newPost,
+                      mediaFile: file,
+                    });
+                  }}
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                />
+                {newPost.mediaFile && (
+                  <div className="mt-2">
+                    {newPost.mediaFile.type.startsWith("image/") ? (
+                      <img
+                        src={
+                          URL.createObjectURL(newPost.mediaFile) ||
+                          "/placeholder.svg"
+                        }
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
+                        <Video className="w-8 h-8 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setCreateDialogOpen(false)}
+                onClick={() => {
+                  setCreateDialogOpen(false);
+                  setNewPost({
+                    communityId: 0,
+                    username: "",
+                    title: "",
+                    content: "",
+                    mediaFile: null,
+                    postType: "text",
+                  });
+                }}
                 disabled={createLoading}
               >
                 Hủy
               </Button>
               <Button
                 onClick={handleCreatePost}
-                disabled={createLoading || !newPost.title || !newPost.content}
-                className="bg-primary hover:bg-primary/90 text-white"
+                disabled={
+                  createLoading ||
+                  !newPost.title ||
+                  !newPost.content ||
+                  !newPost.username ||
+                  newPost.communityId === 0
+                }
+                className="bg-purple-600! hover:bg-purple-700! text-white"
               >
                 {createLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
@@ -1014,119 +1202,145 @@ export default function BlogPostManagement() {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Blog Post Dialog */}
+        {/* Edit Post Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
               <DialogDescription>
-                Cập nhật thông tin bài viết #{editPost.blogId}
+                Cập nhật thông tin bài viết #{editPost.postId}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editAuthorUsername">Tác giả</Label>
-                  <Input
-                    id="editAuthorUsername"
-                    value={editPost.authorUsername}
-                    disabled
-                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editCategory">Danh mục</Label>
-                  <Input
-                    id="editCategory"
-                    value={editPost.category}
-                    onChange={(e) =>
-                      setEditPost({ ...editPost, category: e.target.value })
-                    }
-                    placeholder="Nhập danh mục"
-                    className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                  />
-                </div>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="editTitle">Tiêu đề</Label>
                 <Input
                   id="editTitle"
                   value={editPost.title}
                   onChange={(e) =>
-                    setEditPost({ ...editPost, title: e.target.value })
+                    setEditPost({
+                      ...editPost,
+                      title: e.target.value,
+                    })
                   }
                   placeholder="Nhập tiêu đề bài viết"
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="editSummary">Tóm tắt</Label>
-                <Input
-                  id="editSummary"
-                  value={editPost.summary}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, summary: e.target.value })
-                  }
-                  placeholder="Nhập tóm tắt bài viết"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editFeaturedImage">Ảnh đại diện (URL)</Label>
-                <Input
-                  id="editFeaturedImage"
-                  value={editPost.featuredImage}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, featuredImage: e.target.value })
-                  }
-                  placeholder="Nhập URL ảnh đại diện"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editTags">Tags</Label>
-                <Input
-                  id="editTags"
-                  value={editPost.tags}
-                  onChange={(e) =>
-                    setEditPost({ ...editPost, tags: e.target.value })
-                  }
-                  placeholder="Nhập tags (phân cách bằng dấu phẩy)"
-                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="editContent">Nội dung</Label>
-                <textarea
+                <Textarea
                   id="editContent"
                   value={editPost.content}
                   onChange={(e) =>
-                    setEditPost({ ...editPost, content: e.target.value })
+                    setEditPost({
+                      ...editPost,
+                      content: e.target.value,
+                    })
                   }
                   placeholder="Nhập nội dung bài viết"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:border-primary focus:ring-primary/20 focus:outline-none resize-none"
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="editPostType">Loại bài viết</Label>
+                <Select
+                  value={editPost.postType}
+                  onValueChange={(value) =>
+                    setEditPost({ ...editPost, postType: value })
+                  }
+                >
+                  <SelectTrigger className="border-gray-200 focus:border-primary focus:ring-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="editMediaFile">File media</Label>
+                <Input
+                  id="editMediaFile"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setEditPost({
+                      ...editPost,
+                      mediaFile: file,
+                    });
+                  }}
+                  className="border-gray-200 focus:border-primary focus:ring-primary/20"
+                />
+                <div className="mt-2">
+                  {editPost.mediaFile ? (
+                    editPost.mediaFile.type.startsWith("image/") ? (
+                      <img
+                        src={
+                          URL.createObjectURL(editPost.mediaFile) ||
+                          "/placeholder.svg"
+                        }
+                        alt="New Preview"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
+                        <Video className="w-8 h-8 text-gray-400" />
+                      </div>
+                    )
+                  ) : editPost.mediaUrl ? (
+                    <img
+                      src={editPost.mediaUrl || "/placeholder.svg"}
+                      alt="Current Media"
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="editIsPublished"
-                  checked={editPost.isPublished}
+                  id="editIsPinned"
+                  checked={editPost.isPinned}
                   onChange={(e) =>
                     setEditPost({
                       ...editPost,
-                      isPublished: e.target.checked,
-                      publishedAt: e.target.checked
-                        ? new Date().toISOString()
-                        : null,
+                      isPinned: e.target.checked,
                     })
                   }
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <Label htmlFor="editIsPublished">Xuất bản ngay</Label>
+                <Label htmlFor="editIsPinned">Ghim bài viết</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="editIsActive"
+                  checked={editPost.isActive}
+                  onChange={(e) =>
+                    setEditPost({
+                      ...editPost,
+                      isActive: e.target.checked,
+                    })
+                  }
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <Label htmlFor="editIsActive">Kích hoạt bài viết</Label>
               </div>
             </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 variant="outline"
@@ -1138,7 +1352,7 @@ export default function BlogPostManagement() {
               <Button
                 onClick={handleEditPost}
                 disabled={editLoading || !editPost.title || !editPost.content}
-                className="bg-blue-600! hover:bg-blue-700! text-white"
+                className="bg-purple-600! hover:bg-purple-700! text-white"
               >
                 {editLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />

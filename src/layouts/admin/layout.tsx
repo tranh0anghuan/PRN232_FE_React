@@ -14,6 +14,9 @@ import {
   Phone,
   Bell,
   NotebookPen,
+  BookUser,
+  BookOpen,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -58,17 +61,6 @@ const data = {
       icon: Home,
     },
     {
-      title: "Blog Post",
-      url: ADMIN_ROUTES.BLOG_POST.MANAGE,
-      icon: NotebookPen,
-    },
-
-    {
-      title: "Coach Profile",
-      url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
-      icon: Users,
-    },
-    {
       title: "Support",
       url: "/admin/support",
       icon: MessageSquare,
@@ -76,24 +68,34 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Programs",
-      url: "/admin/programs",
-      icon: Calendar,
+      title: "Coach Profile",
+      url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,
+      icon: BookUser,
     },
     {
-      title: "Success Stories",
-      url: "/admin/stories",
+      title: "Blog Post",
+      url: ADMIN_ROUTES.BLOG_POST.MANAGE,
+      icon: NotebookPen,
+    },
+    {
+      title: "Achievements",
+      url: ADMIN_ROUTES.ACHIEVEMENT.MANAGE,
       icon: Trophy,
     },
     {
-      title: "Crisis Support",
-      url: "/admin/crisis",
-      icon: Phone,
+      title: "Communities",
+      url: ADMIN_ROUTES.COMMUNITY.MANAGE,
+      icon: Users,
     },
     {
-      title: "Health Resources",
-      url: "/admin/resources",
-      icon: Heart,
+      title: "Community Posts",
+      url: ADMIN_ROUTES.POST.MANAGE,
+      icon: BookOpen,
+    },
+    {
+      title: "Motivational Message",
+      url: ADMIN_ROUTES.MOTIVATIONAL_MESSAGE.MANAGE,
+      icon: MessageCircleHeart,
     },
   ],
   navSettings: [
