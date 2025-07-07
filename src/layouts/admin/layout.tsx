@@ -13,6 +13,7 @@ import {
   Heart,
   Phone,
   Bell,
+  NotebookPen,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -57,15 +58,11 @@ const data = {
       icon: Home,
     },
     {
-      title: "Analytics",
-      url: "/admin/analytics",
-      icon: BarChart3,
+      title: "Blog Post",
+      url: ADMIN_ROUTES.BLOG_POST.MANAGE,
+      icon: NotebookPen,
     },
-    {
-      title: "Users",
-      url: ADMIN_ROUTES.USERS.GET_ALL,
-      icon: Users,
-    },
+
     {
       title: "Coach Profile",
       url: ADMIN_ROUTES.COACH_PROFILE.MANAGE,

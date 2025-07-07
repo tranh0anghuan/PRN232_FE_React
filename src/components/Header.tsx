@@ -21,6 +21,8 @@ import {
   UserCircle,
   ChevronDown,
   Cigarette,
+  NotebookPen,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -152,13 +154,23 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link
-                        to="/settings"
+                        to={USER_ROUTES.QUIT_PLANS}
                         className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
                       >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
+                        <NotebookPen className="h-4 w-4 mr-2" />
+                        Quit Plans
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to={USER_ROUTES.PROGRESS_TRACKING.DASHBOARD}
+                        className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                      >
+                        <ChartNoAxesCombined  className="h-4 w-4 mr-2" />
+                        Progress Tracking
+                      </Link>
+                    </DropdownMenuItem>
+                   
                   </DropdownMenuContent>
                 </DropdownMenu>
 
