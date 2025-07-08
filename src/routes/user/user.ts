@@ -19,5 +19,6 @@ export const USER_ROUTES = {
   COMMUNITY:{
     MAIN:"/community",
     DETAIL:"/community/:id",
-  }
+  },
+  ACHIEVEMENT:"/achievements"
 };

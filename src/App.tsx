@@ -32,6 +32,7 @@ import PostManagement from "./pages/admin/post/page";
 import MotivationalMessageManagement from "./pages/admin/motivational-message/page";
 import CommunitiesPage from "./pages/user/community/page";
 import CommunityDetailPage from "./pages/user/community/detail/page";
+import AchievementsPage from "./pages/user/achievement/page";
 function App() {
   return (
     <Router>
@@ -167,6 +168,16 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <CommunityDetailPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.ACHIEVEMENT}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <AchievementsPage />
               </ProtectedRoute>
             </UserLayout>
           }
