@@ -45,7 +45,6 @@ import {
   User,
   ArrowLeft,
   Heart,
-  MessageCircle,
   Pin,
   ImageIcon,
   Video,
@@ -67,12 +66,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { USER_ROUTES } from "@/routes/user/user";
 import { toast } from "sonner";
 import CommentSection from "./components/comment-section";
+import { useNotification } from "@/context/notifaction-context";
+import { userNotificationSettingsService } from "@/services/user/notifcation/settings/service";
+import { userNotificationService } from "@/services/user/notifcation/service";
 
 export default function CommunityDetailPage() {
   const username = getUserFromToken()?.username;
   const params = useParams();
   const navigate = useNavigate();
   const communityId = Number.parseInt(params.id as string);
+  const { incrementUnreadCount } = useNotification();
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -191,6 +194,7 @@ export default function CommunityDetailPage() {
     }
 
     setIsJoining(true);
+
     try {
       const isMember = isUserMember();
 
@@ -216,8 +220,50 @@ export default function CommunityDetailPage() {
             : null
         );
 
+        // Check notification settings and create notification if enabled
+        try {
+          const settingsResponse =
+            await userNotificationSettingsService.getByUsername(username);
+
+          if (settingsResponse.success && settingsResponse.data) {
+            // If community notifications are enabled, create a notification
+            if (settingsResponse.data.communityNotifications && community) {
+              await userNotificationService.createNotification({
+                username: username,
+                title: "Left Community",
+                message: `You have successfully left the "${community.name}" community.`,
+                notificationType: "Info",
+                relatedEntityType: "Community",
+                relatedEntityId: communityId,
+              });
+
+              // Increment the unread count in the header
+              incrementUnreadCount();
+            }
+          } else {
+            // If settings not found, navigate to settings page
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+        } catch (settingsError: any) {
+          // Check if it's a "not found" error
+          if (
+            settingsError.response?.data?.message?.includes("not found") ||
+            settingsError.response?.status === 404
+          ) {
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+          // For other errors, just log them but don't interrupt the flow
+          console.error("Error checking notification settings:", settingsError);
+        }
+
         navigate(USER_ROUTES.COMMUNITY.MAIN);
-        toast("Left Community");
+        toast("Left Community Successfully");
       } else {
         // Join community
         await userCommunityService.joinCommunity(communityId, username);
@@ -245,12 +291,54 @@ export default function CommunityDetailPage() {
             : null
         );
 
+        // Check notification settings and create notification if enabled
+        try {
+          const settingsResponse =
+            await userNotificationSettingsService.getByUsername(username);
+
+          if (settingsResponse.success && settingsResponse.data) {
+            // If community notifications are enabled, create a notification
+            if (settingsResponse.data.communityNotifications && community) {
+              await userNotificationService.createNotification({
+                username: username,
+                title: "Welcome to the Community!",
+                message: `You have successfully joined the "${community.name}" community. Start connecting with other members!`,
+                notificationType: "Info",
+                relatedEntityType: "Community",
+                relatedEntityId: communityId,
+              });
+
+              // Increment the unread count in the header
+              incrementUnreadCount();
+            }
+          } else {
+            // If settings not found, navigate to settings page
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+        } catch (settingsError: any) {
+          // Check if it's a "not found" error
+          if (
+            settingsError.response?.data?.message?.includes("not found") ||
+            settingsError.response?.status === 404
+          ) {
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+          // For other errors, just log them but don't interrupt the flow
+          console.error("Error checking notification settings:", settingsError);
+        }
+
         handleCommunityClick(communityId);
-        toast("Joined Community");
+        toast("Joined Community Successfully");
       }
     } catch (error) {
       console.error("Error joining/leaving community:", error);
-      toast("Error");
+      toast("Failed to process request. Please try again.");
     } finally {
       setIsJoining(false);
     }
@@ -296,7 +384,6 @@ export default function CommunityDetailPage() {
         mediaFile: null,
         postType: "text",
       });
-
       toast("Post created successfully!");
     } catch (error: any) {
       console.error("Error creating post:", error);
@@ -509,6 +596,7 @@ export default function CommunityDetailPage() {
                 )}
               </div>
             </div>
+
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
@@ -523,6 +611,7 @@ export default function CommunityDetailPage() {
                   </CardDescription>
                 </div>
               </div>
+
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex items-center space-x-6 text-sm text-gray-500">
                   <div className="flex items-center">
@@ -787,6 +876,7 @@ export default function CommunityDetailPage() {
                     </div>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">
@@ -796,6 +886,7 @@ export default function CommunityDetailPage() {
                       {post.content}
                     </p>
                   </div>
+
                   {post.mediaUrl && (
                     <div className="rounded-lg overflow-hidden">
                       <img
@@ -805,6 +896,7 @@ export default function CommunityDetailPage() {
                       />
                     </div>
                   )}
+
                   <div className="flex items-center justify-between pt-3 border-t">
                     <div className="flex items-center space-x-6">
                       <button className="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition-colors">
@@ -818,6 +910,7 @@ export default function CommunityDetailPage() {
                     </span>
                   </div>
                 </CardContent>
+
                 <div className="border-t pt-4">
                   <CommentSection
                     postId={post.postId}

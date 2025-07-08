@@ -33,6 +33,8 @@ import MotivationalMessageManagement from "./pages/admin/motivational-message/pa
 import CommunitiesPage from "./pages/user/community/page";
 import CommunityDetailPage from "./pages/user/community/detail/page";
 import AchievementsPage from "./pages/user/achievement/page";
+import NotificationsPage from "./pages/user/notification/page";
+import NotificationSettingsPage from "./pages/user/notification/settings/page";
 function App() {
   return (
     <Router>
@@ -178,6 +180,26 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <AchievementsPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.NOTIFICATION.MAIN}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.NOTIFICATION.SETTINGS}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <NotificationSettingsPage />
               </ProtectedRoute>
             </UserLayout>
           }
