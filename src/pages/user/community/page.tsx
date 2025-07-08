@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +39,9 @@ import { getUserFromToken } from "@/utils/token/auth";
 import { useNavigate } from "react-router-dom";
 import { USER_ROUTES } from "@/routes/user/user";
 import { toast } from "sonner";
+import { useNotification } from "@/context/notifaction-context";
+import { userNotificationSettingsService } from "@/services/user/notifcation/settings/service";
+import { userNotificationService } from "@/services/user/notifcation/service";
 
 export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -52,8 +54,8 @@ export default function CommunitiesPage() {
   const [joiningCommunities, setJoiningCommunities] = useState<Set<number>>(
     new Set()
   );
-
   const navigate = useNavigate();
+  const { incrementUnreadCount } = useNotification();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,6 +132,7 @@ export default function CommunitiesPage() {
 
     try {
       const isMember = isUserMember(communityId);
+      const community = communities.find((c) => c.communityId === communityId);
 
       if (isMember) {
         // Leave community
@@ -151,8 +154,51 @@ export default function CommunitiesPage() {
               : community
           )
         );
+
+        // Check notification settings and create notification if enabled
+        try {
+          const settingsResponse =
+            await userNotificationSettingsService.getByUsername(user.username);
+
+          if (settingsResponse.success && settingsResponse.data) {
+            // If community notifications are enabled, create a notification
+            if (settingsResponse.data.communityNotifications && community) {
+              await userNotificationService.createNotification({
+                username: user.username,
+                title: "Left Community",
+                message: `You have successfully left the "${community.name}" community.`,
+                notificationType: "Info",
+                relatedEntityType: "Community",
+                relatedEntityId: communityId,
+              });
+
+              // Increment the unread count in the header
+              incrementUnreadCount();
+            }
+          } else {
+            // If settings not found, navigate to settings page
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+        } catch (settingsError: any) {
+          // Check if it's a "not found" error
+          if (
+            settingsError.response?.data?.message?.includes("not found") ||
+            settingsError.response?.status === 404
+          ) {
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+          // For other errors, just log them but don't interrupt the flow
+          console.error("Error checking notification settings:", settingsError);
+        }
+
         navigate(USER_ROUTES.COMMUNITY.MAIN);
-        toast("Left Community");
+        toast("Left Community Successfully");
       } else {
         // Join community
         await userCommunityService.joinCommunity(communityId, user.username);
@@ -178,13 +224,55 @@ export default function CommunitiesPage() {
               : community
           )
         );
-        handleCommunityClick(communityId);
 
-        toast("Joined Community");
+        // Check notification settings and create notification if enabled
+        try {
+          const settingsResponse =
+            await userNotificationSettingsService.getByUsername(user.username);
+
+          if (settingsResponse.success && settingsResponse.data) {
+            // If community notifications are enabled, create a notification
+            if (settingsResponse.data.communityNotifications && community) {
+              await userNotificationService.createNotification({
+                username: user.username,
+                title: "Welcome to the Community!",
+                message: `You have successfully joined the "${community.name}" community. Start connecting with other members!`,
+                notificationType: "Info",
+                relatedEntityType: "Community",
+                relatedEntityId: communityId,
+              });
+
+              // Increment the unread count in the header
+              incrementUnreadCount();
+            }
+          } else {
+            // If settings not found, navigate to settings page
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+        } catch (settingsError: any) {
+          // Check if it's a "not found" error
+          if (
+            settingsError.response?.data?.message?.includes("not found") ||
+            settingsError.response?.status === 404
+          ) {
+            toast.info(
+              "Notification settings not found. Please set up your notification preferences."
+            );
+            navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+          }
+          // For other errors, just log them but don't interrupt the flow
+          console.error("Error checking notification settings:", settingsError);
+        }
+
+        handleCommunityClick(communityId);
+        toast("Joined Community Successfully");
       }
     } catch (error) {
       console.error("Error joining/leaving community:", error);
-      toast("Error");
+      toast("Failed to process request. Please try again.");
     } finally {
       setJoiningCommunities((prev) => {
         const newSet = new Set(prev);
@@ -353,6 +441,7 @@ export default function CommunitiesPage() {
                         )}
                       </div>
                     </div>
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg group-hover:text-green-600 transition-colors">
@@ -367,6 +456,7 @@ export default function CommunitiesPage() {
                       </CardDescription>
                     </div>
                   </CardHeader>
+
                   <CardContent className="pt-0">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between text-sm text-gray-500">
@@ -381,6 +471,7 @@ export default function CommunitiesPage() {
                           </div>
                         </div>
                       </div>
+
                       <div className="flex items-center justify-between text-xs text-gray-400">
                         <div className="flex items-center">
                           <User className="h-3 w-3 mr-1" />
@@ -391,6 +482,7 @@ export default function CommunitiesPage() {
                           <span>{formatDate(community.createdAt)}</span>
                         </div>
                       </div>
+
                       <Button
                         className={`w-full text-white ${
                           isUserMember(community.communityId)

@@ -35,8 +35,14 @@ import {
   type Achievement,
   type UserAchievement,
 } from "@/services/user/achievement/service";
+
 import { getUserFromToken } from "@/utils/token/auth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { USER_ROUTES } from "@/routes/user/user";
+import { useNotification } from "@/context/notifaction-context";
+import { userNotificationSettingsService } from "@/services/user/notifcation/settings/service";
+import { userNotificationService } from "@/services/user/notifcation/service";
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -51,6 +57,8 @@ export default function AchievementsPage() {
   const [claimingAchievements, setClaimingAchievements] = useState<Set<number>>(
     new Set()
   );
+  const navigate = useNavigate();
+  const { incrementUnreadCount } = useNotification();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,6 +144,7 @@ export default function AchievementsPage() {
     setClaimingAchievements((prev) => new Set(prev).add(achievementId));
 
     try {
+      // Award the achievement
       await userAchievementService.awardAchievement(
         achievementId,
         user.username,
@@ -157,6 +166,48 @@ export default function AchievementsPage() {
           reason: "Manual claim",
         };
         setUserAchievements((prev) => [...prev, newUserAchievement]);
+      }
+
+      // Check notification settings and create notification if enabled
+      try {
+        const settingsResponse =
+          await userNotificationSettingsService.getByUsername(user.username);
+
+        if (settingsResponse.success && settingsResponse.data) {
+          // If achievement notifications are enabled, create a notification
+          if (settingsResponse.data.achievementNotifications && achievement) {
+            await userNotificationService.createNotification({
+              username: user.username,
+              title: "Achievement Unlocked!",
+              message: `Congratulations! You've earned the "${achievement.name}" achievement.`,
+              notificationType: "Achievement",
+              relatedEntityType: "Achievement",
+              relatedEntityId: achievementId,
+            });
+
+            // Increment the unread count in the header
+            incrementUnreadCount();
+          }
+        } else {
+          // If settings not found, navigate to settings page
+          toast.info(
+            "Notification settings not found. Please set up your notification preferences."
+          );
+          navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+        }
+      } catch (settingsError: any) {
+        // Check if it's a "not found" error
+        if (
+          settingsError.response?.data?.message?.includes("not found") ||
+          settingsError.response?.status === 404
+        ) {
+          toast.info(
+            "Notification settings not found. Please set up your notification preferences."
+          );
+          navigate(USER_ROUTES.NOTIFICATION.SETTINGS);
+        }
+        // For other errors, just log them but don't interrupt the flow
+        console.error("Error checking notification settings:", settingsError);
       }
 
       toast("Achievement claimed successfully!");
