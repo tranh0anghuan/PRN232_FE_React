@@ -30,6 +30,8 @@ import AchievementManagement from "./pages/admin/achievements/page";
 import CommunityManagement from "./pages/admin/community/page";
 import PostManagement from "./pages/admin/post/page";
 import MotivationalMessageManagement from "./pages/admin/motivational-message/page";
+import CommunitiesPage from "./pages/user/community/page";
+import CommunityDetailPage from "./pages/user/community/detail/page";
 function App() {
   return (
     <Router>
@@ -145,6 +147,26 @@ function App() {
             <UserLayout>
               <ProtectedRoute>
                 <UserProgressTrackingImprovements />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.COMMUNITY.MAIN}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <CommunitiesPage />
+              </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+        <Route
+          path={USER_ROUTES.COMMUNITY.DETAIL}
+          element={
+            <UserLayout>
+              <ProtectedRoute>
+                <CommunityDetailPage />
               </ProtectedRoute>
             </UserLayout>
           }

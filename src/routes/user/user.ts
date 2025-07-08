@@ -15,5 +15,9 @@ export const USER_ROUTES = {
     DAILY_LOG:"/progress-tracking/daily-log",
     HISTORY:"/progress-tracking/history",
     IMPROVEMENTS:"/progress-tracking/improvements",
+  },
+  COMMUNITY:{
+    MAIN:"/community",
+    DETAIL:"/community/:id",
   }
 };
