@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { AUTH_ROUTES } from "@/routes/auth/auth";
 import { USER_ROUTES } from "@/routes/user/user";
 import { logout } from "@/services/auth/auth";
@@ -23,13 +24,15 @@ import {
   Cigarette,
   NotebookPen,
   BarChartIcon as ChartNoAxesCombined,
+  Bell,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { MotivationalBanner } from "./MotivationalBanner";
+import { useNotification } from "@/context/notifaction-context";
 
 export function Header() {
   const userLoggedIn = isLoggedIn();
   const currentUser = getUserFromToken();
+  const { unreadCount } = useNotification();
 
   const handleLogout = () => {
     logout();
@@ -63,13 +66,6 @@ export function Header() {
                 Home
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
-              <Link
-                to="#"
-                className="text-gray-600! hover:text-blue-600! font-medium transition-colors duration-200 relative group"
-              >
-                Resources
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
               {currentUser && (
                 <>
                   <Link
@@ -100,15 +96,25 @@ export function Header() {
                     Sessions
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
                   </Link>
+                  <Link
+                    to={USER_ROUTES.NOTIFICATION.MAIN}
+                    className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group flex items-center gap-2"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>Notifications</span>
+                    </div>
+                    {unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] h-5 flex items-center justify-center animate-pulse"
+                      >
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </Badge>
+                    )}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                  </Link>
                 </>
               )}
-              <Link
-                to="#"
-                className="text-gray-600! hover:text-blue-600 font-medium transition-colors duration-200 relative group"
-              >
-                About
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
-              </Link>
             </nav>
 
             {/* Auth Section */}
@@ -210,9 +216,6 @@ export function Header() {
           </div>
         </div>
       </header>
-
-      {/* Motivational Banner - Only show when user is logged in */}
-      {userLoggedIn && <MotivationalBanner />}
     </>
   );
 }
