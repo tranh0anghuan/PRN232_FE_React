@@ -1003,7 +1003,7 @@ export default function BlogPostManagement() {
               <Button
                 onClick={handleCreatePost}
                 disabled={createLoading || !newPost.title || !newPost.content}
-                className="bg-primary hover:bg-primary/90 text-white"
+                className="bg-green-600! hover:bg-green-700! text-white"
               >
                 {createLoading ? (
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
