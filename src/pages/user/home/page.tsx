@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,16 +19,65 @@ import {
   Heart,
   Phone,
 } from "lucide-react";
-import { getUserFromToken, isLoggedIn } from "@/utils/token/auth";
+import { isLoggedIn } from "@/utils/token/auth";
 import { MotivationalBanner } from "@/components/MotivationalBanner";
+import {
+  userHomePageService,
+  type HomePageApiResponse,
+} from "@/services/user/home/service";
+import { FeaturedBlogs } from "./components/featured-blogs";
+import { TopAchievements } from "./components/top-achievements";
+import { BlogStatsSection } from "./components/blog-stats";
+import { MembershipPlans } from "./components/membership-plans";
 
 export default function HomePage() {
-  const user = getUserFromToken();
+  const [homeData, setHomeData] = useState<HomePageApiResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const userLoggedIn = isLoggedIn();
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        const data = await userHomePageService.getAll();
+        setHomeData(data);
+      } catch (err) {
+        setError("Failed to load homepage data");
+        console.error("Error fetching home data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-    {userLoggedIn && <MotivationalBanner />}
+      {userLoggedIn && <MotivationalBanner />}
       <div className="bg-gradient-to-br from-green-50 to-blue-50">
         {/* Hero Section */}
         <section className="relative py-20 lg:py-32">
@@ -50,7 +102,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     size="lg"
-                    className="bg-green-600! hover:bg-green-700 text-white px-8 py-4 text-lg"
+                    className="bg-green-600! hover:bg-green-700! text-white px-8 py-4 text-lg"
                   >
                     Start Your Quit Journey
                   </Button>
@@ -107,6 +159,16 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Dynamic Content Sections */}
+        {homeData && (
+          <>
+            <FeaturedBlogs blogs={homeData.featuredBlogs} />
+            <TopAchievements achievements={homeData.topAchievements} />
+            <BlogStatsSection stats={homeData.blogStats} />
+            <MembershipPlans plans={homeData.membershipPlans} />
+          </>
+        )}
+
         {/* Features Section */}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,7 +182,6 @@ export default function HomePage() {
                 addiction.
               </p>
             </div>
-
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
@@ -138,7 +199,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardContent>
               </Card>
-
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
                   <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -153,7 +213,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardContent>
               </Card>
-
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
                   <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -168,7 +227,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardContent>
               </Card>
-
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
                   <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -183,7 +241,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardContent>
               </Card>
-
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
                   <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -198,7 +255,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardContent>
               </Card>
-
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="text-center pb-4">
                   <div className="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -228,7 +284,6 @@ export default function HomePage() {
                 Hear from people who successfully quit smoking with our support
               </p>
             </div>
-
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Card className="bg-white border-0 shadow-lg">
                 <CardContent className="p-6">
@@ -260,7 +315,6 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
-
               <Card className="bg-white border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
@@ -289,7 +343,6 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
-
               <Card className="bg-white border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
@@ -345,7 +398,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white bg-green-600!  text-white hover:bg-white hover:text-white px-8 py-4 text-lg"
+                  className="border-white bg-green-600 text-white hover:bg-white hover:text-green-600 px-8 py-4 text-lg"
                 >
                   Schedule Consultation
                 </Button>
