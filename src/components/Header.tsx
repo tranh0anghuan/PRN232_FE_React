@@ -137,7 +137,7 @@ export function Header() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link
-                          to="/dashboard"
+                          to={USER_ROUTES.PROFILE}
                           className="flex items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
                         >
                           <UserCircle className="h-4 w-4 mr-2" />

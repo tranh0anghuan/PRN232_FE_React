@@ -66,9 +66,11 @@ function App() {
         <Route
           path={USER_ROUTES.PROFILE}
           element={
+            <UserLayout>
             <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>
+            </UserLayout>
           }
         />
 
