@@ -1,5 +1,5 @@
 export interface ProgressTrackingEntry {
-  id?: number
+  trackingId?: number
   username: string
   trackingDate: string
   cigarettesSmoked: number
