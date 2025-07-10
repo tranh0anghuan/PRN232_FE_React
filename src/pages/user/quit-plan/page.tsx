@@ -222,8 +222,11 @@ export default function QuitPlansPage() {
               You haven't created any quit plans yet. Start your journey to quit
               smoking by creating your first personalized plan.
             </p>
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 text-lg">
-              Create Your First Plan
+            <Button
+              onClick={() => navigate(USER_ROUTES.SMOKE_STATUS)}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 text-lg"
+            >
+              Create Your Smoke Status
             </Button>
           </div>
         </div>
