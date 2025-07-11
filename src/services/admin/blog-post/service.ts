@@ -1,6 +1,23 @@
 import api from "@/config/api/api";
 import { ADMIN_BLOG_POST_API_ROUTES } from "@/routes/api/admin/blog-post";
 
+export interface BlogPost {
+  blogId: number
+  authorUsername: string
+  title: string
+  content: string
+  featuredImage: string
+  summary: string
+  category: string
+  tags: string
+  viewCount: number
+  isPublished: boolean
+  publishedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+
 export const blogPostService = {
   getAllBlogPost: async () => {
     const response = await api.get(ADMIN_BLOG_POST_API_ROUTES.GET_ALL);

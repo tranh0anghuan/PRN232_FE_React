@@ -60,11 +60,6 @@ const data = {
       url: ADMIN_ROUTES.MAIN,
       icon: Home,
     },
-    {
-      title: "Support",
-      url: "/admin/support",
-      icon: MessageSquare,
-    },
   ],
   navSecondary: [
     {
@@ -98,18 +93,18 @@ const data = {
       icon: MessageCircleHeart,
     },
   ],
-  navSettings: [
-    {
-      title: "Content Management",
-      url: "/admin/content",
-      icon: FileText,
-    },
-    {
-      title: "Settings",
-      url: "/admin/settings",
-      icon: Settings,
-    },
-  ],
+  // navSettings: [
+  //   {
+  //     title: "Content Management",
+  //     url: "/admin/content",
+  //     icon: FileText,
+  //   },
+  //   {
+  //     title: "Settings",
+  //     url: "/admin/settings",
+  //     icon: Settings,
+  //   },
+  // ],
 };
 
 interface AdminLayoutProps {
@@ -180,7 +175,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SidebarGroup>
+          {/* <SidebarGroup>
             <SidebarGroupLabel>System</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -196,7 +191,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
-          </SidebarGroup>
+          </SidebarGroup> */}
         </SidebarContent>
 
         <SidebarFooter>

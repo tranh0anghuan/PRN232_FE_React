@@ -398,7 +398,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white bg-green-600 text-white hover:bg-white hover:text-green-600 px-8 py-4 text-lg"
+                  className="border-white bg-green-600! text-white hover:bg-white hover:text-green-600 px-8 py-4 text-lg"
                 >
                   Schedule Consultation
                 </Button>

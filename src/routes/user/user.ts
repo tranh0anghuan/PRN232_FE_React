@@ -25,4 +25,5 @@ export const USER_ROUTES = {
     MAIN:"/notification",
     SETTINGS:"/notification/settings",
   },
+  BLOG_POST:"/blog/:id"
 };
