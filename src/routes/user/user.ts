@@ -25,5 +25,8 @@ export const USER_ROUTES = {
     MAIN:"/notification",
     SETTINGS:"/notification/settings",
   },
-  BLOG_POST:"/blog/:id"
+  BLOG_POST:"/blog/:id",
+  PAYMENT:{
+    HANDLER: "/payment/handler"
+  },
 };

@@ -18,4 +18,10 @@ export const ADMIN_ROUTES = {
   MOTIVATIONAL_MESSAGE: {
     MANAGE: "/admin/motivational-message/manage",
   },
+  MEMBERSHIP_PLAN: {
+    MANAGE: "/admin/membership-plan/manage",
+  },
+  PAYMENT: {
+    MANAGE: "/admin/payment/manage",
+  },
 };

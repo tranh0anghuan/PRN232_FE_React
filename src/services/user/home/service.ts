@@ -34,7 +34,7 @@ export interface MembershipPlan {
   description: string;
   price: number;
   durationDays: number;
-  features: string[];
+  features: string;
   isActive: boolean;
 }
 
