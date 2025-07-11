@@ -487,20 +487,6 @@ export default function QuitPlansPage() {
                     <Play className="w-4 h-4 mr-2" />
                     Continue Plan
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="border-gray-300 bg-transparent"
-                  >
-                    <Award className="w-4 h-4 mr-2" />
-                    View Progress
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-gray-300 bg-transparent"
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Update Plan
-                  </Button>
                 </div>
               </CardContent>
             </Card>

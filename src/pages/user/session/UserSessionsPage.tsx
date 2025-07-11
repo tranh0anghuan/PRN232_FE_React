@@ -313,7 +313,7 @@ export default function UserSessionsPage() {
 
                           <Button
                             onClick={() => handleJoinSession(session.sessionId)}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600! hover:bg-green-700!"
                           >
                             Tham gia Session
                           </Button>

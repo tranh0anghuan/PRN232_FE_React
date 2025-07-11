@@ -203,7 +203,7 @@ export default function SessionDetailPage() {
 
             <div className="flex gap-2">
               {canEdit && !isEditing && (
-                <Button onClick={() => setIsEditing(true)} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={() => setIsEditing(true)} className="bg-green-600! hover:bg-green-700!">
                   <Edit className="w-4 h-4 mr-2" />
                   Chỉnh sửa
                 </Button>
@@ -214,7 +214,7 @@ export default function SessionDetailPage() {
                     <X className="w-4 h-4 mr-2" />
                     Hủy
                   </Button>
-                  <Button onClick={handleSave} disabled={isSaving} className="bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleSave} disabled={isSaving} className="bg-green-600! hover:bg-green-700!">
                     <Save className="w-4 h-4 mr-2" />
                     {isSaving ? "Đang lưu..." : "Lưu"}
                   </Button>

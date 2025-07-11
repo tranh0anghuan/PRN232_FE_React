@@ -165,7 +165,7 @@ export default function CoachSessionsPage() {
 
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="bg-green-600! hover:bg-green-700!">
                   <Plus className="w-4 h-4 mr-2" />
                   Tạo Session Mới
                 </Button>
@@ -317,7 +317,7 @@ export default function CoachSessionsPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600! hover:bg-green-700!"
                     >
                       {isLoading ? "Đang tạo..." : "Tạo Session"}
                     </Button>
