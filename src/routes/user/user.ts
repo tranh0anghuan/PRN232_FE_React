@@ -25,4 +25,7 @@ export const USER_ROUTES = {
     MAIN:"/notification",
     SETTINGS:"/notification/settings",
   },
+  PAYMENT:{
+    HANDLER: "/payment/handler"
+  },
 };

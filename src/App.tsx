@@ -35,6 +35,9 @@ import CommunityDetailPage from "./pages/user/community/detail/page";
 import AchievementsPage from "./pages/user/achievement/page";
 import NotificationsPage from "./pages/user/notification/page";
 import NotificationSettingsPage from "./pages/user/notification/settings/page";
+import MembershipPlanManagement from "@/pages/admin/membership-plan/page.tsx";
+import PaymentHandler from "@/pages/user/payment/handler.tsx";
+import PaymentManagement from "@/pages/admin/payment/page.tsx";
 function App() {
   return (
     <Router>
@@ -250,6 +253,14 @@ function App() {
             </UserLayout>
           }
         />
+          <Route
+              path={USER_ROUTES.PAYMENT.HANDLER}
+              element={
+                  <UserLayout>
+                      <PaymentHandler />
+                  </UserLayout>
+              }
+          />
 
         <Route
           path={ADMIN_ROUTES.COACH_PROFILE.MANAGE}
@@ -322,6 +333,26 @@ function App() {
             </AdminLayout>
           }
         />
+          <Route
+              path={ADMIN_ROUTES.MEMBERSHIP_PLAN.MANAGE}
+              element={
+                  <AdminLayout>
+                      <AdminRoute>
+                          <MembershipPlanManagement />
+                      </AdminRoute>
+                  </AdminLayout>
+              }
+          />
+          <Route
+              path={ADMIN_ROUTES.PAYMENT.MANAGE}
+              element={
+                  <AdminLayout>
+                      <AdminRoute>
+                          <PaymentManagement />
+                      </AdminRoute>
+                  </AdminLayout>
+              }
+          />
       </Routes>
     </Router>
   );
