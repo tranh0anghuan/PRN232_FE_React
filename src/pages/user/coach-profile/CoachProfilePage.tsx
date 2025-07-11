@@ -190,7 +190,7 @@ export default function CoachProfilePage() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-green-600! hover:bg-green-700!" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>

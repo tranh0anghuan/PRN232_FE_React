@@ -508,7 +508,7 @@ export default function CoachManagement() {
                             size="sm"
                             onClick={() => handleUpdateStatus(coach.username, "isVerified", !coach.isVerified)}
                             disabled={verifyLoading === coach.username}
-                            className="w-full"
+                            className={`w-full ${!coach.isVerified ? "bg-green-600!" : "bg-red-600!"}`}
                           >
                             {verifyLoading === coach.username ? (
                               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-1" />
@@ -526,7 +526,7 @@ export default function CoachManagement() {
                             size="sm"
                             onClick={() => handleUpdateStatus(coach.username, "isActive", !coach.isActive)}
                             disabled={verifyLoading === coach.username}
-                            className="w-full"
+                             className={`w-full ${!coach.isActive ? "bg-green-600!" : "bg-red-600!"}`}
                           >
                             {verifyLoading === coach.username ? (
                               <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-1" />

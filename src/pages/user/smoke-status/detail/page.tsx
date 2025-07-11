@@ -708,7 +708,7 @@ export default function SmokeStatusDetailPage() {
                                 Price Per Pack
                               </p>
                               <p className="text-2xl font-bold text-green-600">
-                                ${statusData.cigarettePricePerPack}
+                                {statusData.cigarettePricePerPack} VNĐ
                               </p>
                             </div>
                           </div>
