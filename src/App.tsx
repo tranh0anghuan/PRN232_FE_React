@@ -35,6 +35,7 @@ import CommunityDetailPage from "./pages/user/community/detail/page";
 import AchievementsPage from "./pages/user/achievement/page";
 import NotificationsPage from "./pages/user/notification/page";
 import NotificationSettingsPage from "./pages/user/notification/settings/page";
+import BlogPostDetail from "./pages/user/blog-post/page";
 import MembershipPlanManagement from "@/pages/admin/membership-plan/page.tsx";
 import PaymentHandler from "@/pages/user/payment/handler.tsx";
 import PaymentManagement from "@/pages/admin/payment/page.tsx";
@@ -72,9 +73,9 @@ function App() {
           path={USER_ROUTES.PROFILE}
           element={
             <UserLayout>
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
             </UserLayout>
           }
         />
@@ -206,6 +207,15 @@ function App() {
               <ProtectedRoute>
                 <NotificationSettingsPage />
               </ProtectedRoute>
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path={USER_ROUTES.BLOG_POST}
+          element={
+            <UserLayout>
+              <BlogPostDetail />
             </UserLayout>
           }
         />

@@ -2,13 +2,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Eye } from "lucide-react";
 import type { FeaturedBlog } from "@/services/user/home/service";
+import { USER_ROUTES } from "@/routes/user/user";
+import { useNavigate } from "react-router-dom";
 
 interface FeaturedBlogsProps {
   blogs: FeaturedBlog[];
 }
 
 export function FeaturedBlogs({ blogs }: FeaturedBlogsProps) {
+  const navigate = useNavigate();
   if (blogs.length === 0) return null;
+  const handleOnClick = (id: number) => {
+    const path = USER_ROUTES.BLOG_POST.replace(":id", id.toString());
+    navigate(path);
+  };
 
   return (
     <section className="py-16 bg-white">
@@ -24,6 +31,7 @@ export function FeaturedBlogs({ blogs }: FeaturedBlogsProps) {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogs.slice(0, 3).map((blog) => (
             <Card
+              onClick={() => handleOnClick(blog.blogId)}
               key={blog.blogId}
               className="border-0 shadow-lg hover:shadow-xl transition-shadow"
             >
