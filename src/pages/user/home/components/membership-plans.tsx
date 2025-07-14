@@ -82,7 +82,7 @@ export function MembershipPlans({ plans }: MembershipPlansProps) {
                 <CardTitle className="text-2xl">{plan.planName}</CardTitle>
                 <div className="space-y-2">
                   <div className="text-4xl font-bold text-green-600">
-                    {plan.price} VNĐ
+                    {plan.price} $
                   </div>
                   <p className="text-gray-600">for {plan.durationDays} days</p>
                 </div>
