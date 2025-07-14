@@ -161,22 +161,20 @@ export default function UserProgressTrackingDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-green-100 rounded-2xl">
-                  <Calendar className="h-6 w-6 text-green-600" />
+                  <Cigarette className="h-6 w-6 text-green-600" />
                 </div>
                 <Badge className="bg-green-100 text-green-800 border-green-200">
-                  {summary?.smokeFreeStreak || 0 > 0
-                    ? "Đang tiến bộ"
-                    : "Bắt đầu"}
+                  Đã hút
                 </Badge>
               </div>
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-600">
-                  Ngày không hút thuốc
+                  Số điếu
                 </h3>
                 <p className="text-3xl font-bold text-gray-900">
-                  {summary?.smokeFreeStreak || 0}
+                  {summary?.totalCigarettesSmoked || 0}
                 </p>
-                <p className="text-sm text-gray-500">Chuỗi ngày liên tiếp</p>
+                <p className="text-sm text-gray-500">Số điếu đã hút</p>
               </div>
             </CardContent>
           </Card>
@@ -244,7 +242,7 @@ export default function UserProgressTrackingDashboard() {
                   Thời gian tập luyện
                 </h3>
                 <p className="text-3xl font-bold text-gray-900">
-                  {summary?.totalExerciseMinutes || 0}
+                  {summary?.totalMinutesExercised || 0}
                 </p>
                 <p className="text-sm text-gray-500">Phút tập thể dục</p>
               </div>
