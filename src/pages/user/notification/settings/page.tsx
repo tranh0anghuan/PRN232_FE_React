@@ -200,10 +200,10 @@ export default function NotificationSettingsPage() {
     try {
       await userNotificationSettingsService.updateSettings({
         username: user.username,
-        emailNotifications: settings.emailNotifications,
-        pushNotifications: settings.pushNotifications,
-        dailyReminders: settings.dailyReminders,
-        weeklyReports: settings.weeklyReports,
+        emailNotifications: true,
+        pushNotifications: true,
+        dailyReminders: true,
+        weeklyReports: true,
         achievementNotifications: settings.achievementNotifications,
         communityNotifications: settings.communityNotifications,
         preferredTime: settings.preferredTime,
@@ -337,8 +337,6 @@ export default function NotificationSettingsPage() {
                     Default Settings Include:
                   </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Email and push notifications enabled</li>
-                    <li>• Daily reminders and weekly reports</li>
                     <li>• Achievement and community notifications</li>
                     <li>• Preferred time set to 9:00 AM</li>
                   </ul>
@@ -449,7 +447,7 @@ export default function NotificationSettingsPage() {
             settings && (
               <div className="space-y-8">
                 {/* Delivery Methods */}
-                <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                {/* <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <CardHeader className="pb-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
@@ -550,7 +548,7 @@ export default function NotificationSettingsPage() {
                       />
                     </div>
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Notification Types */}
                 <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -571,7 +569,7 @@ export default function NotificationSettingsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div
+                    {/* <div
                       className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-300 shadow-sm ${getBackgroundClass(
                         settings.dailyReminders,
                         "orange"
@@ -653,7 +651,7 @@ export default function NotificationSettingsPage() {
                           handleToggleChange("weeklyReports", checked)
                         }
                       />
-                    </div>
+                    </div> */}
 
                     <div
                       className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-300 shadow-sm ${getBackgroundClass(

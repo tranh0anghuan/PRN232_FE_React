@@ -14,11 +14,11 @@ export interface ProgressTrackingEntry {
 
 export interface ProgressSummary {
   totalDaysTracked: number
-  totalCigarettesAvoided: number
+  totalCigarettesSmoked: number
   totalMoneySaved: number
   averageMoodRating: number
   smokeFreeStreak: number
-  totalExerciseMinutes: number
+  totalMinutesExercised: number
 }
 
 export interface HealthImprovement {
